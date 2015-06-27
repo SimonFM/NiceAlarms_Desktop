@@ -21,7 +21,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 
-public class MapsActivity extends Activity implements OnMapClickListener,OnMapLongClickListener, OnMarkerDragListener {
+public class MapsActivity extends Activity implements OnMapClickListener,OnMapLongClickListener,OnMarkerDragListener {
 
     /**
      * Constants
