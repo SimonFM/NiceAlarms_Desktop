@@ -58,6 +58,7 @@ public class MapsActivity extends Activity implements OnMapClickListener,OnMapLo
         mMap.setOnMarkerDragListener(this);
         markerClicked = false;
         marker = false;
+        mMap.setTrafficEnabled(true);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, DEFAULT_ZOOM) );
     }
 

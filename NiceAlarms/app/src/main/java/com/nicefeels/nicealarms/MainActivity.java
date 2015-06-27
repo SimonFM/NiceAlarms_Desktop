@@ -1,6 +1,7 @@
 package com.nicefeels.nicealarms;
 
 import android.app.Activity;
+import android.app.FragmentManager;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -10,10 +11,15 @@ import android.widget.Button;
 import android.widget.TimePicker;
 import android.content.Intent;
 
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.model.LatLng;
+
 public class MainActivity extends Activity {
 
     Button button;
     TimePicker timer;
+    private GoogleMap mMap;
     public void addListenerOnButton() {
         button = (Button) findViewById(R.id.locationButton);
         button.setOnClickListener(new OnClickListener() {
@@ -28,6 +34,11 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        FragmentManager myFragmentManager = getFragmentManager();
+        MapFragment myMapFragment = (MapFragment) myFragmentManager.findFragmentById(R.id.mapView);
+        mMap = myMapFragment.getMap();
+        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        mMap.setMyLocationEnabled(false);
         addListenerOnButton();
     }
 

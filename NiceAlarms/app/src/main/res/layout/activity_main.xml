@@ -5,7 +5,7 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity"
     android:background="#4d000000"
-    android:id="@+id/layout">
+    android:id="@+id/layoutMain">
 
     <TextView android:text="Current time:" android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -33,5 +33,16 @@
         android:layout_alignParentStart="true"
         android:layout_alignEnd="@+id/textClock"
         android:textColor="#ff000000" />
+
+    <fragment
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:name="com.google.android.gms.maps.MapFragment"
+        android:id="@+id/mapFragment"
+        android:layout_below="@+id/locationButton"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="58dp"
+        android:layout_alignEnd="@+id/locationButton"
+        android:layout_alignParentBottom="true" />
 
 </RelativeLayout>
