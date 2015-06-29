@@ -26,13 +26,12 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Pick Location"
+        android:text="Set Location"
         android:id="@+id/locationButton"
-        android:layout_marginTop="44dp"
+        android:textColor="#ff000000"
         android:layout_below="@+id/textView2"
         android:layout_alignParentStart="true"
-        android:layout_alignEnd="@+id/textClock"
-        android:textColor="#ff000000" />
+        android:layout_alignEnd="@+id/textClock" />
 
     <fragment
         android:layout_width="wrap_content"
@@ -44,5 +43,15 @@
         android:layout_marginTop="58dp"
         android:layout_alignEnd="@+id/locationButton"
         android:layout_alignParentBottom="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Reset Location"
+        android:id="@+id/resetButton"
+        android:textColor="#ff000000"
+        android:layout_below="@+id/locationButton"
+        android:layout_alignParentStart="true"
+        android:layout_alignEnd="@+id/locationButton" />
 
 </RelativeLayout>

@@ -36,6 +36,10 @@ public class MapsActivity extends Activity implements OnMapClickListener,OnMapLo
     public static boolean marker;
     private final Context context = this;
 
+    /***
+     *
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -43,8 +47,7 @@ public class MapsActivity extends Activity implements OnMapClickListener,OnMapLo
         setContentView(R.layout.activity_maps);
 
         FragmentManager myFragmentManager = getFragmentManager();
-        MapFragment myMapFragment
-                = (MapFragment) myFragmentManager.findFragmentById(R.id.mapView);
+        MapFragment myMapFragment = (MapFragment) myFragmentManager.findFragmentById(R.id.mapView);
         mMap = myMapFragment.getMap();
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
 
@@ -70,10 +73,8 @@ public class MapsActivity extends Activity implements OnMapClickListener,OnMapLo
             if (null == mMap) {
                 mMap = ((MapFragment) getFragmentManager().findFragmentById(R.id.mapView)).getMap();
                 mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-                if (null == mMap) {
-                    Toast.makeText(getApplicationContext(),
-                            "Error creating map", Toast.LENGTH_SHORT).show();
-                }
+                if (null == mMap)
+                    Toast.makeText(getApplicationContext(),"Error creating map", Toast.LENGTH_SHORT).show();
             }
         } catch (NullPointerException exception) {
             Log.e("mapApp", exception.toString());
@@ -93,7 +94,7 @@ public class MapsActivity extends Activity implements OnMapClickListener,OnMapLo
             markerClicked = false;
             marker = true;
 
-            CustomDialog dialog = new CustomDialog(this);
+            CustomDialog dialog = new CustomDialog(this,"Do you want to choose a different location?");
             dialog.show();
         }
 
