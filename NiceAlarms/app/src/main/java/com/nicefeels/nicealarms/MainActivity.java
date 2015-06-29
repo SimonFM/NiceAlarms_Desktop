@@ -72,13 +72,16 @@ public class MainActivity extends Activity implements
         locationButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View arg0) {
-                mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-               // Log.i(TAG, "User Location: "+ mLastLocation.getLatitude()+" "+mLastLocation.getLongitude());
+                // mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+                Log.i(TAG, "User Location: "+ mLastLocation.getLatitude()+" "+mLastLocation.getLongitude());
 
-                Log.i(TAG,"Requested Location: "+ userAlarmLocation.latitude+" "+userAlarmLocation.longitude);
-//                Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
-//                        userAlarmLocation.latitude,userAlarmLocation.longitude,distanceBetween);
+                Log.i(TAG, "Requested Location: " + userAlarmLocation.latitude + " " + userAlarmLocation.longitude);
+                Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
+                        userAlarmLocation.latitude, userAlarmLocation.longitude, distanceBetween);
 
+                Log.i(TAG, "Distance " + distanceBetween[0] + " " + distanceBetween[1]
+                            + " "+ distanceBetween[2]+ " "+ distanceBetween[3]);
+                if(distanceBetween[0] < 1000) Log.i(TAG,"You're nearly there, sorry haha");
             }
         });
 
@@ -137,6 +140,14 @@ public class MainActivity extends Activity implements
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        mGoogleApiClient.connect();
+        Log.i("Connected?", String.valueOf(mGoogleApiClient.isConnected()));
+        //new Thread(new GetContent()).start();
+    }
+
+    @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
 
     }
@@ -147,7 +158,10 @@ public class MainActivity extends Activity implements
     @Override
     public void onConnected(Bundle connectionHint) {
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        if (mLastLocation != null){};
+        if (mLastLocation != null){
+            Log.i(TAG,""+mLastLocation.getLatitude());
+            Log.i(TAG,""+mLastLocation.getLongitude());
+        };
     }
 
     /***
@@ -156,29 +170,4 @@ public class MainActivity extends Activity implements
      */
     @Override
     public void onConnectionSuspended(int i) {}
-
-
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.menu_main, menu);
-//        return true;
-//    }
-
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        // Handle action bar item clicks here. The action bar will
-//        // automatically handle clicks on the Home/Up button, so long
-//        // as you specify a parent activity in AndroidManifest.xml.
-//        int id = item.getItemId();
-//
-//        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-//
-//        return super.onOptionsItemSelected(item);
-//    }
-
-
 }
