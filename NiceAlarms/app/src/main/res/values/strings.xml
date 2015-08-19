@@ -4,4 +4,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_maps">Map</string>
+    <string name="title_activity_maps_activity_1">Map</string>
+    <string name="title_activity_count_down">CountDownActivity</string>
+    <string name="title_activity_alarm_receiver">AlarmReceiver</string>
 </resources>

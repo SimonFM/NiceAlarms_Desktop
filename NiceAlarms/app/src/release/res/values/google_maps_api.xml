@@ -4,17 +4,16 @@
 
     To get one, follow this link, follow the directions and press "Create" at the end:
 
-https://console.developers.google.com/flows/enableapi?apiid=maps_android_backend&keyType=CLIENT_SIDE_ANDROID&r=67:A2:BE:82:82:67:5A:CC:96:5B:7B:4D:5B:D5:44:E0:6A:62:F8:35%3Bcom.nicefeels.nicealarms
+https://console.developers.google.com/flows/enableapi?apiid=maps_android_backend&keyType=CLIENT_SIDE_ANDROID&r=BF:D2:DC:86:1D:B8:25:A0:D9:73:20:84:38:FC:A1:47:42:3A:A2:43;com.nicefeels.nicealarms
 
     You can also add your credentials to an existing key, using this line:
-    67:A2:BE:82:82:67:5A:CC:96:5B:7B:4D:5B:D5:44:E0:6A:62:F8:35;com.nicefeels.nicealarms
-
+    BF:D2:DC:86:1D:B8:25:A0:D9:73:20:84:38:FC:A1:47:42:3A:A2:43;com.nicefeels.nicealarms
     Once you have your key (it starts with "AIza"), replace the "google_maps_key"
     string in this file.
     -->
     <!-- This is the app one -->
     <string name="google_maps_key" translatable="false" templateMergeStrategy="preserve">
-        AIzaSyAGIoXkWspYs1ookjHay4G6jFnhctPSys0
+        AIzaSyBxQYpoJdITGauQg32w0G8dMyCH0W4Ffuk
     </string>
 
     <!-- THIS IS THE KEYSTORE VERSION -->
