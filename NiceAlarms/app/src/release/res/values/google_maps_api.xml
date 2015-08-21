@@ -13,7 +13,7 @@ https://console.developers.google.com/flows/enableapi?apiid=maps_android_backend
     -->
     <!-- This is the app one -->
     <string name="google_maps_key" translatable="false" templateMergeStrategy="preserve">
-        AIzaSyBxQYpoJdITGauQg32w0G8dMyCH0W4Ffuk
+        AIzaSyCMwFE2XcYT6gNJFIE-ZQ-LyGULPrR4Wig
     </string>
 
     <!-- THIS IS THE KEYSTORE VERSION -->

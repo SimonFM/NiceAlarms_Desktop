@@ -12,12 +12,14 @@
     -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>
 
     <application
         android:allowBackup="true"
         android:icon="@drawable/alarm"
         android:label="Nice Alarms"
         android:theme="@style/AppTheme">
+
         <activity
             android:name=".MainActivity"
             android:label="Nice Alarms" >
@@ -42,18 +44,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.nicefeels.nicealarms.MainActivity" />
         </activity>
-        <activity
-            android:name=".MapsActivity_1"
-            android:label="@string/title_activity_maps_activity_1" >
-        </activity>
-        <activity
-            android:name="layout.SettingsActivity"
-            android:label="@string/title_activity_settings"
-            android:parentActivityName=".MainActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.nicefeels.nicealarms.MainActivity" />
-        </activity>
+        <receiver android:name=".Alarm"/>
     </application>
 
 </manifest>
