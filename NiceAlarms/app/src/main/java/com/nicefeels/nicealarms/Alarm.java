@@ -19,8 +19,8 @@ public class Alarm extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.i(TAG, "HEY in Alarm!");
-        Location mLastLocation = LocationServices.FusedLocationApi.getLastLocation(MainActivity.mGoogleApiClient);
-        Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
+        MainActivity.mLastLocation = LocationServices.FusedLocationApi.getLastLocation(MainActivity.mGoogleApiClient);
+        Location.distanceBetween(MainActivity.mLastLocation.getLatitude(),MainActivity.mLastLocation.getLongitude(),
                                  MainActivity.userAlarmLocation.latitude, MainActivity.userAlarmLocation.longitude, newDist);
         Log.i(TAG, "Distance: " + MainActivity.distanceBetween[0]);
         if (newDist[0] > 1000) {

@@ -2,13 +2,17 @@ package com.nicefeels.nicealarms;
 
 import android.app.Activity;
 import android.app.AlarmManager;
+import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
+import android.location.LocationManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -52,6 +56,7 @@ public class MainActivity extends Activity implements
     public static MediaPlayer mp;
     public static PendingIntent pendingIntent;
     public static AlarmManager manager;
+    LocationManager locationMan;
 
 
     /***
@@ -62,15 +67,32 @@ public class MainActivity extends Activity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        locationMan = (LocationManager)context.getSystemService(Context.LOCATION_SERVICE);
 
+        boolean gps_enabled = false;
+        boolean network_enabled = false;
+
+        try {
+            gps_enabled = locationMan.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            network_enabled = locationMan.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        } catch(Exception ex) {}
+
+        if(!gps_enabled && !network_enabled) {
+            // notify user
+            Toast.makeText(this, "Location Services needs to be turned on.", Toast.LENGTH_LONG).show();
+        }
+        buildGoogleApiClient();
         mp = MediaPlayer.create(this, R.raw.chime);
         setContentView(R.layout.activity_main);
         Log.i(TAG, "Just before addMap");
         setUpMap();
         Log.i(TAG, "Just before addListener");
         addListenerOnButton();
-        Log.i(TAG,"Just before buildAPI");
-        buildGoogleApiClient();
+        Log.i(TAG, "Just before buildAPI");
+        mLastLocation = new Location("");//provider name is unecessary
+        mLastLocation.setLatitude(0.0d);//your coords of course
+        mLastLocation.setLongitude(0.0d);
+
 
     }
 
@@ -97,7 +119,7 @@ public class MainActivity extends Activity implements
                     if (distanceBetween[0] < 1000) {
                         tooClose();
                     } else {
-                        Log.i(TAG,"Just before start()");
+                        Log.i(TAG, "Just before start()");
                         start();
                     }
                 }
@@ -195,11 +217,14 @@ public class MainActivity extends Activity implements
     }
 
     protected synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
+        }
+        mGoogleApiClient.connect();
     }
 
     /**
@@ -225,28 +250,31 @@ public class MainActivity extends Activity implements
     @Override
     protected void onStart() {
         super.onStart();
-        mGoogleApiClient.connect();
+
         Log.i(TAG, "Connected: " + String.valueOf(mGoogleApiClient.isConnected()));
         //new Thread(new GetContent()).start();
     }
 
     @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {}
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Log.e("Connected failed", String.valueOf(mGoogleApiClient.isConnected()));
+    }
     /***
      * TODO
      * @param connectionHint
      */
     @Override
     public void onConnected(Bundle connectionHint) {
-        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        //mLastLocation = null;
-        if (mLastLocation != null){
-            Log.i(TAG,""+mLastLocation.getLatitude());
-            Log.i(TAG, "" + mLastLocation.getLongitude());
-        }
-        else{
-            Log.i(TAG,"NOPE");
-        }
+        Log.i(TAG, "GoogleApiClient connected");
+//        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+//        //mLastLocation = null;
+//        if (mLastLocation != null){
+//            Log.i(TAG,""+mLastLocation.getLatitude());
+//            Log.i(TAG, "" + mLastLocation.getLongitude());
+//        }
+//        else{
+//            Log.i(TAG,"NOPE");
+//        }
     }
 
     /***
