@@ -42,7 +42,7 @@ public class MainActivity extends Activity implements
      */
     private Context context  = this;
     public static LatLng userAlarmLocation;
-    private GoogleApiClient mGoogleApiClient;
+    public static GoogleApiClient mGoogleApiClient;
     private Button locationButton, resetButton;
     public static GoogleMap mMap;
     private boolean markerClicked;
