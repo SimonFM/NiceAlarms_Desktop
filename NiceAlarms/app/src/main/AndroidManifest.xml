@@ -7,26 +7,27 @@
     <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"
         android:icon="@drawable/alarm"
         android:label="Nice Alarms"
-        android:theme="@style/AppTheme">
-
+        android:theme="@style/AppTheme" >
         <activity
             android:name=".MainActivity"
             android:label="Nice Alarms" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <meta-data
             android:name="com.google.android.gms.version"
-            android:value='@integer/google_play_services_version' />
+            android:value="@integer/google_play_services_version" />
         <meta-data
             android:name="com.google.android.maps.v2.API_KEY"
             android:value="@string/google_maps_key" />
@@ -38,7 +39,9 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.nicefeels.nicealarms.MainActivity" />
         </activity>
-        <receiver android:name=".Alarm"/>
+
+        <receiver android:name=".Alarm" />
+
     </application>
 
 </manifest>

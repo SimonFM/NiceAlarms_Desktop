@@ -8,8 +8,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.model.LatLng;
-
+import android.os.Vibrator;
 /**
  * Created by Jigsaw on 21/08/2015.
  */
@@ -19,6 +18,8 @@ public class Alarm extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.i(TAG, "HEY in Alarm!");
+        Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+
         MainActivity.mLastLocation = LocationServices.FusedLocationApi.getLastLocation(MainActivity.mGoogleApiClient);
         Location.distanceBetween(MainActivity.mLastLocation.getLatitude(),MainActivity.mLastLocation.getLongitude(),
                                  MainActivity.userAlarmLocation.latitude, MainActivity.userAlarmLocation.longitude, newDist);
@@ -30,6 +31,8 @@ public class Alarm extends BroadcastReceiver {
         else{
             Toast.makeText(context, "You're There!", Toast.LENGTH_LONG).show();
             MainActivity.mp.start();
+            // Vibrate for 500 milliseconds
+            v.vibrate(3000);
             Log.i(TAG, "Wake Up!" + newDist[0]);
         }
     }
