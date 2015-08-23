@@ -2,17 +2,14 @@ package com.nicefeels.nicealarms;
 
 import android.app.Activity;
 import android.app.AlarmManager;
-import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.app.PendingIntent;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -28,9 +25,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.common.api.GoogleApiClient;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-
 public class MainActivity extends Activity implements
         GoogleMap.OnMapLongClickListener, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
@@ -40,9 +34,10 @@ public class MainActivity extends Activity implements
      */
     private final LatLng DEFAULT_LOCATION = new LatLng(53.3096163, -6.3123088);
     public final static String TAG = "NiceFeelsApp";
+    public final int MINIMUM_DISTANCE = 1000;
     private final int DEFAULT_ZOOM = 10;
     /**
-     * Local variables *
+     * Instance variables
      */
     private Context context  = this;
     public static LatLng userAlarmLocation;
@@ -55,18 +50,17 @@ public class MainActivity extends Activity implements
     public static float distanceBetween[];
     public static MediaPlayer mp;
     public static PendingIntent pendingIntent;
-    public static AlarmManager manager;
-    LocationManager locationMan;
+    private AlarmManager manager;
+    private LocationManager locationMan;
 
 
     /***
-     *
+     * Creates the app in order to be used.
      * @param savedInstanceState
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         locationMan = (LocationManager)context.getSystemService(Context.LOCATION_SERVICE);
 
         boolean gps_enabled = false;
@@ -84,11 +78,8 @@ public class MainActivity extends Activity implements
         buildGoogleApiClient();
         mp = MediaPlayer.create(this, R.raw.chime);
         setContentView(R.layout.activity_main);
-        Log.i(TAG, "Just before addMap");
         setUpMap();
-        Log.i(TAG, "Just before addListener");
         addListenerOnButton();
-        Log.i(TAG, "Just before buildAPI");
         mLastLocation = new Location("");//provider name is unecessary
         mLastLocation.setLatitude(0.0d);//your coords of course
         mLastLocation.setLongitude(0.0d);
@@ -97,7 +88,11 @@ public class MainActivity extends Activity implements
     }
 
     /***
+     * A method that adds the various buttons to the activity. If the reset button is pressed,
+     * then the alarm is cancelled, or when the set Location is pressed, then the alarm is set.
      *
+     * If the user doesn't have their location services activated, then a small message is displayed
+     * and nothing else can be done.
      */
     public void addListenerOnButton() {
         locationButton = (Button) findViewById(R.id.locationButton);
@@ -115,13 +110,11 @@ public class MainActivity extends Activity implements
                             userAlarmLocation.latitude, userAlarmLocation.longitude, distanceBetween);
                 } else {
                     Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
-                            userAlarmLocation.latitude, userAlarmLocation.longitude, distanceBetween);
-                    if (distanceBetween[0] < 1000) {
-                        tooClose();
-                    } else {
-                        Log.i(TAG, "Just before start()");
-                        start();
-                    }
+                                             userAlarmLocation.latitude, userAlarmLocation.longitude, distanceBetween);
+
+                    if (distanceBetween[0] < MINIMUM_DISTANCE) tooClose();
+                    else start();
+
                 }
             }
         });
@@ -137,71 +130,35 @@ public class MainActivity extends Activity implements
     }
 
     /**
-     *
+     * Tells the user they are too close to their stop.
      */
     public void tooClose(){
-        Log.i(TAG, "You're nearly there, sorry haha");
         Toast.makeText(this, "Too close to your stop", Toast.LENGTH_SHORT).show();
         mMap.clear();
         marker = false;
     }
 
     /***
-     *
+     * A method that cancells the alarm that was set and displays a message saying
+     * this to the user.
      */
     public void cancel() {
         manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         manager.cancel(pendingIntent);
         Toast.makeText(this, "Alarm Cancelled", Toast.LENGTH_SHORT).show();
-        Log.i(TAG, "Alarm Cancelled");
     }
 
-    /***
-     *
-     */
-    public void cancel_1() {
-        manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        manager.cancel(pendingIntent);
-
-    }
-
-    /***
-     *
-     */
-    public void startAt10() {
-        manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        int interval = 1000 * 60 * 20;
-
-        /* Set the alarm to start at 10:30 AM */
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(System.currentTimeMillis());
-        calendar.set(Calendar.HOUR_OF_DAY, 20);
-        calendar.set(Calendar.MINUTE, 5);
-
-        /* Repeating on every 20 minutes interval */
-        manager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), 1000 * 60 * 20, pendingIntent);
-    }
     /**
-     *
+     * Displays a message saying the alarm was started, also starts the alarm
      */
     public void start() {
         manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        GregorianCalendar time = new GregorianCalendar();
-        /* Set the alarm to start at 10:30 AM */
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(System.currentTimeMillis());
-
-
-        //Toast.makeText(this, ""+time.HOUR_OF_DAY, Toast.LENGTH_SHORT).show();
-        Log.i(TAG, "lulz_1");
-        //manager.set(AlarmManager.RTC_WAKEUP, time, PendingIntent.getBroadcast(this, 1, intentAlarm, PendingIntent.FLAG_UPDATE_CURRENT));
-        manager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 1000*5, pendingIntent);
-        Log.i(TAG, "lulz_2");
+        manager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 5000, pendingIntent);
         Toast.makeText(this, "Alarm Set", Toast.LENGTH_SHORT).show();
     }
 
     /***
-     *
+     *  Sets up the map, taken from google's tutorials
      */
     public void setUpMap(){
         FragmentManager myFragmentManager = getFragmentManager();
@@ -235,22 +192,23 @@ public class MainActivity extends Activity implements
     public void onMapLongClick(LatLng point) {
         if (!marker) {
             mMap.addMarker(new MarkerOptions()
-                    .position(point)
+                    .position(userAlarmLocation)
                     .draggable(true));
             markerClicked = false;
             marker = true;
-            userAlarmLocation = point;
-
             CustomDialog dialog = new CustomDialog(this,"Would you like to replace the tag?");
             dialog.show();
         }
 
     }
 
+    /***
+     * A method that is run when the app starts
+     * purely for debugging atm.
+     */
     @Override
     protected void onStart() {
         super.onStart();
-
         Log.i(TAG, "Connected: " + String.valueOf(mGoogleApiClient.isConnected()));
         //new Thread(new GetContent()).start();
     }
@@ -260,25 +218,16 @@ public class MainActivity extends Activity implements
         Log.e("Connected failed", String.valueOf(mGoogleApiClient.isConnected()));
     }
     /***
-     * TODO
+     * A method that runs when the API is connected to.
      * @param connectionHint
      */
     @Override
     public void onConnected(Bundle connectionHint) {
+
         Log.i(TAG, "GoogleApiClient connected");
-//        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-//        //mLastLocation = null;
-//        if (mLastLocation != null){
-//            Log.i(TAG,""+mLastLocation.getLatitude());
-//            Log.i(TAG, "" + mLastLocation.getLongitude());
-//        }
-//        else{
-//            Log.i(TAG,"NOPE");
-//        }
     }
 
     /***
-     * TODO
      * @param i
      */
     @Override

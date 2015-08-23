@@ -1,8 +1,1 @@
 TO ADD:
-    Back ground services checker.
-
-    http://www.vogella.com/tutorials/AndroidServices/article.html
-    http://stackoverflow.com/questions/16629128/run-process-in-background-in-android
-    https://developer.android.com/training/run-background-service/create-service.html
-    https://developer.android.com/training/best-background.html
-    http://developer.android.com/training/run-background-service/index.html

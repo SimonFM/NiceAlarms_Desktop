@@ -7,4 +7,5 @@
     <string name="title_activity_maps_activity_1">Map</string>
     <string name="title_activity_count_down">CountDownActivity</string>
     <string name="title_activity_alarm_receiver">AlarmReceiver</string>
+    <string name="title_activity_splash">Splash</string>
 </resources>
