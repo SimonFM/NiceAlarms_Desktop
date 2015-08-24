@@ -17,25 +17,30 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 public class MainActivity extends Activity implements
         GoogleMap.OnMapLongClickListener, GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
+        GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     /**
      * Constants
      */
-    private final LatLng DEFAULT_LOCATION = new LatLng(53.3096163, -6.3123088);
+    private final LatLng TEST_LOCATION = new LatLng(53.3096163, -6.3123088);
     public final static String TAG = "NiceFeelsApp";
     public final int MINIMUM_DISTANCE = 1000;
     private final int DEFAULT_ZOOM = 10;
+    private static final long MIN_TIME = 400;
+    private static final float MIN_DISTANCE = 1000;
     /**
      * Instance variables
      */
@@ -62,30 +67,25 @@ public class MainActivity extends Activity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         locationMan = (LocationManager)context.getSystemService(Context.LOCATION_SERVICE);
-
+        mLastLocation = null;
+        buildGoogleApiClient();
         boolean gps_enabled = false;
         boolean network_enabled = false;
 
         try {
             gps_enabled = locationMan.isProviderEnabled(LocationManager.GPS_PROVIDER);
-            network_enabled = locationMan.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
         } catch(Exception ex) {}
 
-        if(!gps_enabled && !network_enabled) {
+        if(!gps_enabled) {
             // notify user
-            Toast.makeText(this, "Location Services needs to be turned on.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "GPS needs to be turned on.", Toast.LENGTH_LONG).show();
         }
-        buildGoogleApiClient();
+
         mp = MediaPlayer.create(this, R.raw.chime);
         setContentView(R.layout.activity_main);
-        setUpMap();
         addListenerOnButton();
-        userAlarmLocation = new LatLng(0,0);
-        mLastLocation = new Location("");//provider name is unecessary
-        mLastLocation.setLatitude(0.0d);//your coords of course
-        mLastLocation.setLongitude(0.0d);
-
-
+        setUpMap();
+        //userAlarmLocation = new LatLng(0,0);
     }
 
     /***
@@ -106,12 +106,10 @@ public class MainActivity extends Activity implements
             public void onClick(View arg0) {
                 if (mLastLocation == null) {
                     Log.i(TAG, "No location yet");
-                    mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-                    Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
-                            userAlarmLocation.latitude, userAlarmLocation.longitude, distanceBetween);
+                    mLastLocation = locationMan.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 } else {
                     Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
-                                             userAlarmLocation.latitude, userAlarmLocation.longitude, distanceBetween);
+                            userAlarmLocation.latitude, userAlarmLocation.longitude, distanceBetween);
 
                     if (distanceBetween[0] < MINIMUM_DISTANCE) tooClose();
                     else start();
@@ -171,7 +169,25 @@ public class MainActivity extends Activity implements
         markerClicked = false;
         marker = false;
         mMap.setTrafficEnabled(true);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, DEFAULT_ZOOM));
+
+
+//        if (mLastLocation != null){
+//           // mLastLocation  = locationMan.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+//            double longitude = mLastLocation.getLongitude();
+//            double latitude = mLastLocation.getLatitude();
+//            String locLat = String.valueOf(latitude)+","+String.valueOf(longitude);
+//            Log.i(TAG,locLat+" GPS way");
+//            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), DEFAULT_ZOOM));
+//        }
+//        else{
+//            //mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+//            double longitude = mLastLocation.getLongitude();
+//            double latitude = mLastLocation.getLatitude();
+//            String locLat = String.valueOf(latitude)+","+String.valueOf(longitude);
+//            Log.i(TAG,locLat+" API way");
+//            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude,longitude),DEFAULT_ZOOM));
+//        }
+
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -215,6 +231,7 @@ public class MainActivity extends Activity implements
     @Override
     protected void onStart() {
         super.onStart();
+
         Log.i(TAG, "Connected: " + String.valueOf(mGoogleApiClient.isConnected()));
         //new Thread(new GetContent()).start();
     }
@@ -229,7 +246,6 @@ public class MainActivity extends Activity implements
      */
     @Override
     public void onConnected(Bundle connectionHint) {
-
         Log.i(TAG, "GoogleApiClient connected");
     }
 
@@ -239,5 +255,25 @@ public class MainActivity extends Activity implements
     @Override
     public void onConnectionSuspended(int i) {}
 
+    @Override
+    public void onLocationChanged(Location location) {
+        mLastLocation = location;
+        // Getting latitude of the current location
+        double latitude = location.getLatitude();
 
+        // Getting longitude of the current location
+        double longitude = location.getLongitude();
+
+        // Creating a LatLng object for the current location
+        LatLng latLng = new LatLng(latitude, longitude);
+
+        // Showing the current location in Google Map
+        CameraPosition camPos = new CameraPosition.Builder()
+                .target(latLng)
+                .zoom(DEFAULT_ZOOM)
+                .bearing(location.getBearing())
+                .build();
+        CameraUpdate camUpd3 = CameraUpdateFactory.newCameraPosition(camPos);
+        mMap.animateCamera(camUpd3);
+    }
 }
