@@ -14,14 +14,22 @@ import android.os.Vibrator;
  */
 public class Alarm extends BroadcastReceiver {
     public final static String TAG = "NiceFeelsApp";
+    private Vibrator v;
+    // Vibrate in this pattern
+    // sleep, vibrate for 100ms, sleep for half a second, vibrate for 300ms
+    private long[] pattern = {0, 100, 1000, 300, 500, 1500};
     public final static int MINIMUM_DISTANCE = 1000;
+    private AlarmManager manager;
+    private Location mLastLocation;
+
 
     private float[] newDist = new float[4];
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-        MainActivity.mLastLocation = LocationServices.FusedLocationApi.getLastLocation(MainActivity.mGoogleApiClient);
+        v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(MainActivity.mGoogleApiClient);
+
         Location.distanceBetween(MainActivity.mLastLocation.getLatitude(),MainActivity.mLastLocation.getLongitude(),
                                  MainActivity.userAlarmLocation.latitude, MainActivity.userAlarmLocation.longitude, newDist);
         Log.i(TAG, "Distance: " + MainActivity.distanceBetween[0]);
@@ -33,11 +41,8 @@ public class Alarm extends BroadcastReceiver {
             Toast.makeText(context, "You're There!", Toast.LENGTH_LONG).show();
             MainActivity.mp.start();
 
-            // Vibrate in this pattern
-            // sleep, vibrate for 100ms, sleep for half a second, vibrate for 300ms
-            long[] pattern = {0, 100, 500, 300};
             v.vibrate(pattern, -1); //-1 is important
-            AlarmManager manager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+            manager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
             manager.cancel(MainActivity.pendingIntent);
         }
     }

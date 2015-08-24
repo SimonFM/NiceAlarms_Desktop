@@ -7,17 +7,6 @@
     tools:context="com.nicefeels.nicealarms.Splash"
     android:background="#F1635A">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Nice Alarms"
-        android:id="@+id/textView"
-        android:textSize="32dp"
-        android:layout_marginBottom="74dp"
-        android:layout_above="@+id/imageView"
-        android:layout_centerHorizontal="true" />
-
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

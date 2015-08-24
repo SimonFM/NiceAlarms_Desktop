@@ -80,6 +80,7 @@ public class MainActivity extends Activity implements
         setContentView(R.layout.activity_main);
         setUpMap();
         addListenerOnButton();
+        userAlarmLocation = new LatLng(0,0);
         mLastLocation = new Location("");//provider name is unecessary
         mLastLocation.setLatitude(0.0d);//your coords of course
         mLastLocation.setLongitude(0.0d);
@@ -175,13 +176,17 @@ public class MainActivity extends Activity implements
 
     protected synchronized void buildGoogleApiClient() {
         if (mGoogleApiClient == null) {
+            Log.i(TAG,"Building!");
             mGoogleApiClient = new GoogleApiClient.Builder(this)
                     .addConnectionCallbacks(this)
                     .addOnConnectionFailedListener(this)
                     .addApi(LocationServices.API)
                     .build();
+            mGoogleApiClient.connect();
         }
-        mGoogleApiClient.connect();
+        else mGoogleApiClient.reconnect();
+
+
     }
 
     /**
@@ -192,12 +197,13 @@ public class MainActivity extends Activity implements
     public void onMapLongClick(LatLng point) {
         if (!marker) {
             mMap.addMarker(new MarkerOptions()
-                    .position(userAlarmLocation)
+                    .position(point)
                     .draggable(true));
             markerClicked = false;
             marker = true;
             CustomDialog dialog = new CustomDialog(this,"Would you like to replace the tag?");
             dialog.show();
+            userAlarmLocation = point;
         }
 
     }
