@@ -6,6 +6,7 @@ import android.app.FragmentManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.media.MediaPlayer;
@@ -13,6 +14,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -30,7 +32,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 
 public class MainActivity extends Activity implements
         GoogleMap.OnMapLongClickListener, GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, LocationListener {
+        GoogleApiClient.OnConnectionFailedListener{
 
     /**
      * Constants
@@ -57,6 +59,8 @@ public class MainActivity extends Activity implements
     public static PendingIntent pendingIntent;
     private AlarmManager manager;
     private LocationManager locationMan;
+    private Criteria criteria;
+    private String provider;
 
 
     /***
@@ -66,26 +70,17 @@ public class MainActivity extends Activity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        locationMan = (LocationManager)context.getSystemService(Context.LOCATION_SERVICE);
-        mLastLocation = null;
         buildGoogleApiClient();
-        boolean gps_enabled = false;
-        boolean network_enabled = false;
-
-        try {
-            gps_enabled = locationMan.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        } catch(Exception ex) {}
-
-        if(!gps_enabled) {
-            // notify user
-            Toast.makeText(this, "GPS needs to be turned on.", Toast.LENGTH_LONG).show();
-        }
-
+        locationMan = (LocationManager)getSystemService(LOCATION_SERVICE);
+        criteria = new Criteria();
+        provider = locationMan.getBestProvider(criteria, true);
+        mLastLocation = locationMan.getLastKnownLocation(provider);
         mp = MediaPlayer.create(this, R.raw.chime);
+
         setContentView(R.layout.activity_main);
         addListenerOnButton();
         setUpMap();
-        //userAlarmLocation = new LatLng(0,0);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     /***
@@ -106,7 +101,7 @@ public class MainActivity extends Activity implements
             public void onClick(View arg0) {
                 if (mLastLocation == null) {
                     Log.i(TAG, "No location yet");
-                    mLastLocation = locationMan.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                    mLastLocation = locationMan.getLastKnownLocation(provider);
                 } else {
                     Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
                             userAlarmLocation.latitude, userAlarmLocation.longitude, distanceBetween);
@@ -169,25 +164,11 @@ public class MainActivity extends Activity implements
         markerClicked = false;
         marker = false;
         mMap.setTrafficEnabled(true);
-
-
-//        if (mLastLocation != null){
-//           // mLastLocation  = locationMan.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-//            double longitude = mLastLocation.getLongitude();
-//            double latitude = mLastLocation.getLatitude();
-//            String locLat = String.valueOf(latitude)+","+String.valueOf(longitude);
-//            Log.i(TAG,locLat+" GPS way");
-//            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), DEFAULT_ZOOM));
-//        }
-//        else{
-//            //mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-//            double longitude = mLastLocation.getLongitude();
-//            double latitude = mLastLocation.getLatitude();
-//            String locLat = String.valueOf(latitude)+","+String.valueOf(longitude);
-//            Log.i(TAG,locLat+" API way");
-//            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude,longitude),DEFAULT_ZOOM));
-//        }
-
+        if(mLastLocation != null) {
+            LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 10);
+            mMap.animateCamera(cameraUpdate);
+        }
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -254,26 +235,4 @@ public class MainActivity extends Activity implements
      */
     @Override
     public void onConnectionSuspended(int i) {}
-
-    @Override
-    public void onLocationChanged(Location location) {
-        mLastLocation = location;
-        // Getting latitude of the current location
-        double latitude = location.getLatitude();
-
-        // Getting longitude of the current location
-        double longitude = location.getLongitude();
-
-        // Creating a LatLng object for the current location
-        LatLng latLng = new LatLng(latitude, longitude);
-
-        // Showing the current location in Google Map
-        CameraPosition camPos = new CameraPosition.Builder()
-                .target(latLng)
-                .zoom(DEFAULT_ZOOM)
-                .bearing(location.getBearing())
-                .build();
-        CameraUpdate camUpd3 = CameraUpdateFactory.newCameraPosition(camPos);
-        mMap.animateCamera(camUpd3);
-    }
 }

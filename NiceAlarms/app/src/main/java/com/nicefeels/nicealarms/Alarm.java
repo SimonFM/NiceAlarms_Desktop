@@ -4,7 +4,9 @@ import android.app.AlarmManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationManager;
 import android.util.Log;
 import android.widget.Toast;
 import com.google.android.gms.location.LocationServices;
@@ -21,21 +23,25 @@ public class Alarm extends BroadcastReceiver {
     public final static int MINIMUM_DISTANCE = 1000;
     private AlarmManager manager;
     private Location mLastLocation;
+    LocationManager locationMan;
 
 
     private float[] newDist = new float[4];
     @Override
     public void onReceive(Context context, Intent intent) {
-
+        LocationManager locationManager = (LocationManager)context.getSystemService(context.LOCATION_SERVICE);
+        Criteria criteria = new Criteria();
+        String provider = locationManager.getBestProvider(criteria, true);
+        mLastLocation = locationManager.getLastKnownLocation(provider);
         v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(MainActivity.mGoogleApiClient);
+//        mLastLocation = MainActivity.mMap.getMyLocation();
 
-        Location.distanceBetween(MainActivity.mLastLocation.getLatitude(),MainActivity.mLastLocation.getLongitude(),
+        Location.distanceBetween(mLastLocation.getLatitude(),mLastLocation.getLongitude(),
                                  MainActivity.userAlarmLocation.latitude, MainActivity.userAlarmLocation.longitude, newDist);
         Log.i(TAG, "Distance: " + MainActivity.distanceBetween[0]);
         if (newDist[0] > MINIMUM_DISTANCE) {
             Log.i(TAG, "Distance: " + newDist[0]);
-            Toast.makeText(context, "Distance: " + newDist[0], Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "Distance: " + newDist[0], Toast.LENGTH_SHORT).show();
         }
         else{
             Toast.makeText(context, "You're There!", Toast.LENGTH_LONG).show();
