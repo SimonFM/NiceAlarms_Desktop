@@ -1,1 +1,15 @@
-TO ADD:
+NOTE:
+
+Current minimum distance is 50m for debugging purposes.
+
+BUGS:
+
+Something is going on with the Google API client methods, I'm not sure what, but I have a susupision
+that its something to do with it going too fast on my phone, Could be wrong.
+
+
+TODO:
+
+Background processes for the alarms.
+
+Maybe the ability to send texts to people that you are like 1km away from somewhere.

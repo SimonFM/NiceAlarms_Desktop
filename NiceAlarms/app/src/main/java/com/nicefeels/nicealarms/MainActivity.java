@@ -11,6 +11,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -19,7 +20,6 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -37,12 +37,14 @@ public class MainActivity extends Activity implements
     /**
      * Constants
      */
-    private final LatLng TEST_LOCATION = new LatLng(53.3096163, -6.3123088);
+    //private final LatLng TEST_LOCATION = new LatLng(53.3096163, -6.3123088);
     public final static String TAG = "NiceFeelsApp";
-    public final int MINIMUM_DISTANCE = 1000;
-    private final int DEFAULT_ZOOM = 10;
+    public final int MINIMUM_DISTANCE = 50;
+    private final int DEFAULT_ZOOM = 15;
     private static final long MIN_TIME = 400;
     private static final float MIN_DISTANCE = 1000;
+    private final int SPLASH_DISPLAY_LENGTH = 1000;            //set your time here......
+
     /**
      * Instance variables
      */
@@ -81,6 +83,25 @@ public class MainActivity extends Activity implements
         addListenerOnButton();
         setUpMap();
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+            }
+        }, SPLASH_DISPLAY_LENGTH);
+
+        if(mLastLocation != null) {
+            LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+            CameraUpdate userLocation = CameraUpdateFactory.newLatLngZoom(latLng, DEFAULT_ZOOM);
+            mMap.animateCamera(userLocation);
+        }
+        else{
+//            mLastLocation = locationMan.getLastKnownLocation(provider);
+//            LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+//            CameraUpdate userLocation = CameraUpdateFactory.newLatLngZoom(latLng, DEFAULT_ZOOM);
+//            mMap.animateCamera(userLocation);
+            Toast.makeText(context, "Unable to get location", Toast.LENGTH_LONG).show();
+        }
     }
 
     /***
@@ -101,7 +122,13 @@ public class MainActivity extends Activity implements
             public void onClick(View arg0) {
                 if (mLastLocation == null) {
                     Log.i(TAG, "No location yet");
-                    mLastLocation = locationMan.getLastKnownLocation(provider);
+                    if(mMap.getMyLocation() == null)
+                        mLastLocation = locationMan.getLastKnownLocation(provider);
+                    else {
+                        mLastLocation = mMap.getMyLocation();
+                        if (distanceBetween[0] < MINIMUM_DISTANCE) tooClose();
+                        else start();
+                    }
                 } else {
                     Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
                             userAlarmLocation.latitude, userAlarmLocation.longitude, distanceBetween);
@@ -163,11 +190,6 @@ public class MainActivity extends Activity implements
         markerClicked = false;
         marker = false;
         mMap.setTrafficEnabled(true);
-        if(mLastLocation != null) {
-            LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 10);
-            mMap.animateCamera(cameraUpdate);
-        }
     }
 
     protected synchronized void buildGoogleApiClient() {
