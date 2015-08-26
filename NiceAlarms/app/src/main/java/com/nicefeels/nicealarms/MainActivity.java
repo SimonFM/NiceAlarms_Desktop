@@ -105,7 +105,6 @@ public class MainActivity extends Activity implements
                 } else {
                     Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
                             userAlarmLocation.latitude, userAlarmLocation.longitude, distanceBetween);
-
                     if (distanceBetween[0] < MINIMUM_DISTANCE) tooClose();
                     else start();
 

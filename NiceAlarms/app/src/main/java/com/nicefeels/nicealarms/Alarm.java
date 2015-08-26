@@ -10,6 +10,10 @@ import android.location.LocationManager;
 import android.util.Log;
 import android.widget.Toast;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.model.LatLng;
+
 import android.os.Vibrator;
 /**
  * Created by Jigsaw on 21/08/2015.
@@ -34,12 +38,14 @@ public class Alarm extends BroadcastReceiver {
         String provider = locationManager.getBestProvider(criteria, true);
         mLastLocation = locationManager.getLastKnownLocation(provider);
         v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-//        mLastLocation = MainActivity.mMap.getMyLocation();
 
         Location.distanceBetween(mLastLocation.getLatitude(),mLastLocation.getLongitude(),
                                  MainActivity.userAlarmLocation.latitude, MainActivity.userAlarmLocation.longitude, newDist);
         Log.i(TAG, "Distance: " + MainActivity.distanceBetween[0]);
         if (newDist[0] > MINIMUM_DISTANCE) {
+            LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 10);
+            MainActivity.mMap.animateCamera(cameraUpdate);
             Log.i(TAG, "Distance: " + newDist[0]);
             Toast.makeText(context, "Distance: " + newDist[0], Toast.LENGTH_SHORT).show();
         }
