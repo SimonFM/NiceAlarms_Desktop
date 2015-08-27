@@ -9,6 +9,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -40,9 +41,17 @@
         <service
             android:name=".RingAlarm"
             android:exported="false" />
+
         <activity
             android:name=".HowTo"
             android:label="@string/title_activity_how_to" >
+        </activity>
+        <activity
+            android:name=".MapsActivity"
+            android:label="@string/title_activity_maps" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.nicefeels.nicealarms.MainActivity" />
         </activity>
     </application>
 

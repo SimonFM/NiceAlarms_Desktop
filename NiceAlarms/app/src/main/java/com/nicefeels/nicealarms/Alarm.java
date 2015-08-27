@@ -31,13 +31,13 @@ public class Alarm extends BroadcastReceiver {
     private long[] pattern = {0, 100, 1000, 300, 500, 1500};
     public final static int MINIMUM_DISTANCE = 1000;
     private AlarmManager manager;
-    private Location mLastLocation;
+    private Location mLastLocation,targetLocation;
     private LocationManager locationMan;
     private String provider;
     private Criteria criteria;
 
 
-    private float[] newDist = new float[4];
+    private float newDist;// = new float[4];
     @Override
     public void onReceive(Context context, Intent intent) {
         locationMan = (LocationManager)context.getSystemService(context.LOCATION_SERVICE);
@@ -47,6 +47,7 @@ public class Alarm extends BroadcastReceiver {
         v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
 
         if(mLastLocation != null){
+            Log.i(TAG,"Inside Alarm: "+mLastLocation.getLatitude()+","+mLastLocation.getLongitude());
             alarmMethod(context);
         }
         else if(MainActivity.mMap.getMyLocation() != null){
@@ -60,25 +61,33 @@ public class Alarm extends BroadcastReceiver {
     }
 
     private void alarmMethod(Context context){
-        Location.distanceBetween(mLastLocation.getLatitude(),mLastLocation.getLongitude(),
-                MainActivity.userAlarmLocation.latitude, MainActivity.userAlarmLocation.longitude, newDist);
-        Log.i(TAG, "Distance: " + MainActivity.distanceBetween[0]);
 
-        // if the distance is less than MINIMUM ring the alarm,
-        // otherwise display the distance
-        if (newDist[0] > MINIMUM_DISTANCE) {
-            LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
-            MainActivity.mMap.animateCamera(cameraUpdate);
-            Log.i(TAG, "Distance: " + newDist[0]);
-            Toast.makeText(context, "Distance: " + newDist[0], Toast.LENGTH_SHORT).show();
+        if(MainActivity.targetLocation == null){
+            Log.i(TAG, "User hasnt picked a location");
         }
         else{
-            Toast.makeText(context, "You're There!", Toast.LENGTH_LONG).show();
-            MainActivity.mp.start();
-            v.vibrate(pattern, -1); //-1 is important
-            manager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-            manager.cancel(MainActivity.pendingIntent);
+            Log.i(TAG,"Inside Alarm Method mLocation: "+mLastLocation.getLatitude()+","+mLastLocation.getLongitude());
+            Log.i(TAG,"Inside Alarm Method targetLocation: "+MainActivity.targetLocation.getLatitude()+","+MainActivity.targetLocation.getLongitude());
+            newDist = mLastLocation.distanceTo(MainActivity.targetLocation);
+            Log.i(TAG, "Distance: " + newDist );//+ MainActivity.distanceBetween[0]);
+
+            // if the distance is less than MINIMUM ring the alarm,
+            // otherwise display the distance
+            if (newDist > MINIMUM_DISTANCE) {
+                LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+                CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
+                MainActivity.mMap.animateCamera(cameraUpdate);
+                Log.i(TAG, "Distance: " + newDist);
+                Toast.makeText(context, "Distance: " + newDist, Toast.LENGTH_SHORT).show();
+            }
+            else{
+                Toast.makeText(context, "You're There!", Toast.LENGTH_LONG).show();
+                MainActivity.mp.start();
+                v.vibrate(pattern, -1); //-1 is important
+                manager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+                manager.cancel(MainActivity.pendingIntent);
+            }
         }
+
     }
 }

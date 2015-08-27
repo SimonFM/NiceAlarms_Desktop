@@ -1,127 +1,65 @@
 package com.nicefeels.nicealarms;
 
-import android.app.Activity;
-import android.app.Dialog;
-import android.app.FragmentManager;
-import android.content.Context;
+import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.android.gms.maps.*;
-
-import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
-import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
-import com.google.android.gms.maps.GoogleMap.OnMarkerDragListener;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+public class MapsActivity extends FragmentActivity {
 
-public class MapsActivity extends Activity implements OnMapClickListener,OnMapLongClickListener,OnMarkerDragListener {
+    private GoogleMap mMap; // Might be null if Google Play services APK is not available.
 
-    /**
-     * Constants
-     */
-    private final LatLng DEFAULT_LOCATION = new LatLng(53.3096163, -6.3123088);
-    private final int DEFAULT_ZOOM = 10;
-    /**
-     * Local variables *
-     */
-    public static GoogleMap mMap;
-    private boolean markerClicked;
-    public static boolean marker;
-    private final Context context = this;
-
-    /***
-     *
-     * @param savedInstanceState
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        setUpMapIfNeeded();
+    }
 
-        FragmentManager myFragmentManager = getFragmentManager();
-        MapFragment myMapFragment = (MapFragment) myFragmentManager.findFragmentById(R.id.mapView);
-        mMap = myMapFragment.getMap();
-        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-
-
-        mMap.setMyLocationEnabled(true);
-
-        createMapView();
-
-        mMap.setOnMapClickListener(this);
-        mMap.setOnMapLongClickListener(this);
-        mMap.setOnMarkerDragListener(this);
-        markerClicked = false;
-        marker = false;
-        mMap.setTrafficEnabled(true);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, DEFAULT_ZOOM) );
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setUpMapIfNeeded();
     }
 
     /**
-     * Creates the view for the map
+     * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
+     * installed) and the map has not already been instantiated.. This will ensure that we only ever
+     * call {@link #setUpMap()} once when {@link #mMap} is not null.
+     * <p/>
+     * If it isn't installed {@link SupportMapFragment} (and
+     * {@link com.google.android.gms.maps.MapView MapView}) will show a prompt for the user to
+     * install/update the Google Play services APK on their device.
+     * <p/>
+     * A user can return to this FragmentActivity after following the prompt and correctly
+     * installing/updating/enabling the Google Play services. Since the FragmentActivity may not
+     * have been completely destroyed during this process (it is likely that it would only be
+     * stopped or paused), {@link #onCreate(Bundle)} may not be called again so we should call this
+     * method in {@link #onResume()} to guarantee that it will be called.
      */
-    private void createMapView() {
-        try {
-            if (null == mMap) {
-                mMap = ((MapFragment) getFragmentManager().findFragmentById(R.id.mapView)).getMap();
-                mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-                if (null == mMap)
-                    Toast.makeText(getApplicationContext(),"Error creating map", Toast.LENGTH_SHORT).show();
+    private void setUpMapIfNeeded() {
+        // Do a null check to confirm that we have not already instantiated the map.
+        if (mMap == null) {
+            // Try to obtain the map from the SupportMapFragment.
+            mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
+                    .getMap();
+            // Check if we were successful in obtaining the map.
+            if (mMap != null) {
+                setUpMap();
             }
-        } catch (NullPointerException exception) {
-            Log.e("mapApp", exception.toString());
         }
     }
 
     /**
-     * Handles A long press on the screen
-     * @param point
+     * This is where we can add markers or lines, add listeners or move the camera. In this case, we
+     * just add a marker near Africa.
+     * <p/>
+     * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
-    @Override
-    public void onMapLongClick(LatLng point) {
-        if (!marker) {
-            mMap.addMarker(new MarkerOptions()
-                    .position(point)
-                    .draggable(true));
-            markerClicked = false;
-            marker = true;
-
-            CustomDialog dialog = new CustomDialog(this,"Do you want to choose a different location?");
-            dialog.show();
-        }
-
-    }
-    /***
-     * Handles a single press on the screen.
-     * @param point
-     */
-    @Override
-    public void onMapClick(LatLng point) {
-        mMap.animateCamera(CameraUpdateFactory.newLatLng(point));
-        markerClicked = false;
-    }
-
-    @Override
-    public void onMarkerDrag(Marker marker) {
-//        tvLocInfo.setText("Marker " + marker.getId() + " Drag@" + marker.getPosition());
-    }
-
-    @Override
-    public void onMarkerDragEnd(Marker marker) {
-//        tvLocInfo.setText("Marker " + marker.getId() + " DragEnd");
-    }
-
-    @Override
-    public void onMarkerDragStart(Marker marker) {
-//        tvLocInfo.setText("Marker " + marker.getId() + " DragStart");
-
+    private void setUpMap() {
+        mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
     }
 }

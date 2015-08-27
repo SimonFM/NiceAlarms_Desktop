@@ -2,21 +2,27 @@ package com.nicefeels.nicealarms;
 
 import android.app.Activity;
 import android.app.AlarmManager;
+import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.location.Address;
 import android.location.Criteria;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -27,8 +33,11 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.common.api.GoogleApiClient;
+
+import java.util.List;
 
 public class MainActivity extends Activity implements
         GoogleMap.OnMapLongClickListener, GoogleApiClient.ConnectionCallbacks,
@@ -39,8 +48,8 @@ public class MainActivity extends Activity implements
      */
     //private final LatLng TEST_LOCATION = new LatLng(53.3096163, -6.3123088);
     public final static String TAG = "NiceFeelsApp";
-    public final int MINIMUM_DISTANCE = 50;
-    private final int DEFAULT_ZOOM = 15;
+    public final int MINIMUM_DISTANCE = 1000;
+    private final int DEFAULT_ZOOM = 14;
     private static final long MIN_TIME = 400;
     private static final float MIN_DISTANCE = 1000;
     private final int SPLASH_DISPLAY_LENGTH = 1000;            //set your time here......
@@ -48,21 +57,24 @@ public class MainActivity extends Activity implements
     /**
      * Instance variables
      */
-    private Context context  = this;
+    private Context context;
     public static LatLng userAlarmLocation;
     public static GoogleApiClient mGoogleApiClient;
-    private Button locationButton, resetButton;
+    public static Button locationButton, resetButton, searchButton;
     public static GoogleMap mMap;
     private boolean markerClicked;
     public static boolean marker;
     public static Location mLastLocation;
-    public static float distanceBetween[];
+    public static LatLng mLastLocation_LtLn;
+    public static float distanceBetween;
     public static MediaPlayer mp;
     public static PendingIntent pendingIntent;
     private AlarmManager manager;
-    private LocationManager locationMan;
-    private Criteria criteria;
-    private String provider;
+    public static LocationManager locationMan;
+    public static Criteria criteria;
+    public static String provider;
+    private String m_Text = "";
+    public static Location targetLocation;
 
 
     /***
@@ -73,6 +85,7 @@ public class MainActivity extends Activity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         buildGoogleApiClient();
+        context = this;
         locationMan = (LocationManager)getSystemService(LOCATION_SERVICE);
         criteria = new Criteria();
         provider = locationMan.getBestProvider(criteria, true);
@@ -91,15 +104,11 @@ public class MainActivity extends Activity implements
         }, SPLASH_DISPLAY_LENGTH);
 
         if(mLastLocation != null) {
-            LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-            CameraUpdate userLocation = CameraUpdateFactory.newLatLngZoom(latLng, DEFAULT_ZOOM);
+            mLastLocation_LtLn = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+            CameraUpdate userLocation = CameraUpdateFactory.newLatLngZoom(mLastLocation_LtLn, DEFAULT_ZOOM);
             mMap.animateCamera(userLocation);
         }
         else{
-//            mLastLocation = locationMan.getLastKnownLocation(provider);
-//            LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-//            CameraUpdate userLocation = CameraUpdateFactory.newLatLngZoom(latLng, DEFAULT_ZOOM);
-//            mMap.animateCamera(userLocation);
             Toast.makeText(context, "Unable to get location", Toast.LENGTH_LONG).show();
         }
     }
@@ -114,7 +123,8 @@ public class MainActivity extends Activity implements
     public void addListenerOnButton() {
         locationButton = (Button) findViewById(R.id.locationButton);
         resetButton = (Button) findViewById(R.id.resetButton);
-        distanceBetween = new float[4];
+        searchButton = (Button) findViewById(R.id.searchButton);
+
         Intent alarmIntent = new Intent(MainActivity.this, Alarm.class);
         pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, alarmIntent, 0);
         locationButton.setOnClickListener(new OnClickListener() {
@@ -122,17 +132,30 @@ public class MainActivity extends Activity implements
             public void onClick(View arg0) {
                 if (mLastLocation == null) {
                     Log.i(TAG, "No location yet");
-                    if(mMap.getMyLocation() == null)
+                    if (mMap.getMyLocation() == null) {
                         mLastLocation = locationMan.getLastKnownLocation(provider);
+
+                    }
                     else {
-                        mLastLocation = mMap.getMyLocation();
-                        if (distanceBetween[0] < MINIMUM_DISTANCE) tooClose();
+                        //mLastLocation = mMap.getMyLocation();
+                        mLastLocation = locationMan.getLastKnownLocation(provider);
+                        distanceBetween = mLastLocation.distanceTo(targetLocation);
+//                        Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
+//                                userAlarmLocation.latitude, userAlarmLocation.longitude, distanceBetween);
+                        Log.i(TAG, "Inside addListenerOnButton()_1 Method targetLocation: " + targetLocation.getLatitude() + "," + targetLocation.getLongitude());
+                        setTargetLocation();
+
+                        if (distanceBetween < MINIMUM_DISTANCE) tooClose();
                         else start();
                     }
                 } else {
-                    Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
-                            userAlarmLocation.latitude, userAlarmLocation.longitude, distanceBetween);
-                    if (distanceBetween[0] < MINIMUM_DISTANCE) tooClose();
+//                    Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
+//                            userAlarmLocation.latitude, userAlarmLocation.longitude, distanceBetween);
+                    distanceBetween = mLastLocation.distanceTo(targetLocation);
+                    Log.i(TAG, "Inside addListenerOnButton()_2 Method targetLocation: " + targetLocation.getLatitude() + "," + targetLocation.getLongitude());
+                    setTargetLocation();
+
+                    if (distanceBetween < MINIMUM_DISTANCE) tooClose();
                     else start();
 
                 }
@@ -147,6 +170,83 @@ public class MainActivity extends Activity implements
                 cancel();
             }
         });
+
+        searchButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                //builder.setTitle("");
+
+                // Set up the input
+                final EditText input = new EditText(context);
+                // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+                input.setInputType(InputType.TYPE_CLASS_TEXT);
+                builder.setView(input);
+
+                // Set up the buttons
+                builder.setPositiveButton("Search!", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        m_Text = input.getText().toString();
+                        userAlarmLocation = getLocationFromAddress(m_Text);
+
+//                        Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
+//                                userAlarmLocation.latitude, userAlarmLocation.longitude, distanceBetween);
+
+                        mMap.addMarker(new MarkerOptions()
+                                .position(getLocationFromAddress(m_Text))
+                                .draggable(false));
+                    }
+                });
+                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                        m_Text = "";
+                    }
+                });
+
+                builder.show();
+            }
+        });
+    }
+
+    public void setTargetLocation(){
+        targetLocation = new Location("");//provider name is unecessary
+        targetLocation.setLatitude(userAlarmLocation.latitude);//your coords of course
+        targetLocation.setLongitude(userAlarmLocation.longitude);
+    }
+
+    /***
+     * Found from Stackoverflow:
+     * http://stackoverflow.com/questions/3574644/how-can-i-find-the-latitude-and-longitude-from-address
+     *
+     * @param strAddress
+     * @return
+     */
+    public LatLng getLocationFromAddress(String strAddress) {
+
+        Geocoder coder = new Geocoder(this);
+        List<Address> address;
+        LatLng p1 = null;
+
+        try {
+            address = coder.getFromLocationName(strAddress, 5);
+            if (address == null) {
+                return null;
+            }
+            Address location = address.get(0);
+            location.getLatitude();
+            location.getLongitude();
+
+            p1 = new LatLng(location.getLatitude(), location.getLongitude() );
+
+        } catch (Exception ex) {
+
+            ex.printStackTrace();
+        }
+
+        return p1;
     }
 
     /**
@@ -175,6 +275,11 @@ public class MainActivity extends Activity implements
         manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         manager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 5000, pendingIntent);
         Toast.makeText(this, "Alarm Set", Toast.LENGTH_SHORT).show();
+        mLastLocation_LtLn = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+
+        // Animates camera to include both points hopefully :P
+        LatLngBounds pos = new LatLngBounds(mLastLocation_LtLn,userAlarmLocation);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(pos, 0));
     }
 
     /***
@@ -216,13 +321,14 @@ public class MainActivity extends Activity implements
         if (!marker) {
             mMap.addMarker(new MarkerOptions()
                     .position(point)
-                    .draggable(true));
+                    .draggable(false));
             markerClicked = false;
             marker = true;
             CustomDialog dialog = new CustomDialog(this,"Would you like to replace the tag?");
             dialog.show();
             userAlarmLocation = point;
         }
+        setTargetLocation();
 
     }
 

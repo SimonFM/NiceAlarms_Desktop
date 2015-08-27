@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="80dp"
-    android:background="#3E80B4"
+    android:background="#F1635A"
     android:orientation="vertical" >
 
     <TextView
@@ -20,7 +20,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
-        android:background="#3E80B4"
+        android:background="#F1635A"
         android:orientation="horizontal" >
 
         <Button
@@ -30,7 +30,7 @@
             android:background="@android:color/white"
             android:clickable="true"
             android:text="Okay"
-            android:textColor="#5DBCD2"
+            android:textColor="#F1635A"
             android:textStyle="bold" />
 
     </LinearLayout>

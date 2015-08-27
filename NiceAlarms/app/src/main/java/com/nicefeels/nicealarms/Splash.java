@@ -2,6 +2,9 @@ package com.nicefeels.nicealarms;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.location.Criteria;
+import android.location.LocationManager;
+import android.media.MediaPlayer;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -17,14 +20,22 @@ public class Splash extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-        new Handler().postDelayed(new Runnable(){
+        new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 /* Create an Intent that will start the Menu-Activity. */
-                Intent mainIntent = new Intent(Splash.this,HowTo.class);
+                Intent mainIntent = new Intent(Splash.this, HowTo.class);
                 Splash.this.startActivity(mainIntent);
                 Splash.this.finish();
             }
         }, SPLASH_DISPLAY_LENGTH);
+
+//        MainActivity.locationMan = (LocationManager)getSystemService(LOCATION_SERVICE);
+//        MainActivity.criteria = new Criteria();
+//        MainActivity.provider = MainActivity.locationMan.getBestProvider( MainActivity.criteria, true);
+//        MainActivity.mLastLocation = MainActivity.locationMan.getLastKnownLocation( MainActivity.provider);
+//        MainActivity.mp = MediaPlayer.create(this, R.raw.chime);
+
+
     }
 }
