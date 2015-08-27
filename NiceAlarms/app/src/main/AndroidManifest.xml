@@ -29,16 +29,21 @@
 
         <receiver android:name=".Alarm" />
 
-        <activity
-            android:name=".Splash">
+        <activity android:name=".Splash" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <service
             android:name=".RingAlarm"
             android:exported="false" />
+        <activity
+            android:name=".HowTo"
+            android:label="@string/title_activity_how_to" >
+        </activity>
     </application>
 
 </manifest>
