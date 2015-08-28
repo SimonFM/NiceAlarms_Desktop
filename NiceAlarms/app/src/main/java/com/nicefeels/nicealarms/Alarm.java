@@ -77,8 +77,9 @@ public class Alarm extends BroadcastReceiver {
                 LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
                 CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
                 MainActivity.mMap.animateCamera(cameraUpdate);
-                Log.i(TAG, "Distance: " + newDist);
-                Toast.makeText(context, "Distance: " + newDist, Toast.LENGTH_SHORT).show();
+                Log.i(TAG, "Distance: " + newDist / 1000 +"m");
+                float shavedDist = newDist / 1000;
+                Toast.makeText(context, "Distance: " +  shavedDist +"m", Toast.LENGTH_SHORT).show();
             }
             else{
                 Toast.makeText(context, "You're There!", Toast.LENGTH_LONG).show();

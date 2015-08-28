@@ -134,14 +134,13 @@ public class MainActivity extends Activity implements
                     Log.i(TAG, "No location yet");
                     if (mMap.getMyLocation() == null) {
                         mLastLocation = locationMan.getLastKnownLocation(provider);
-
                     }
                     else {
                         //mLastLocation = mMap.getMyLocation();
                         mLastLocation = locationMan.getLastKnownLocation(provider);
+                        Log.i(TAG,"mLastionLocation in Main: "+mLastLocation.getLatitude()+","+mLastLocation.getLongitude());
+                        Log.i(TAG,"targetLocation in Main: "+targetLocation.getLatitude()+","+targetLocation.getLongitude());
                         distanceBetween = mLastLocation.distanceTo(targetLocation);
-//                        Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
-//                                userAlarmLocation.latitude, userAlarmLocation.longitude, distanceBetween);
                         Log.i(TAG, "Inside addListenerOnButton()_1 Method targetLocation: " + targetLocation.getLatitude() + "," + targetLocation.getLongitude());
                         setTargetLocation();
 
@@ -149,14 +148,18 @@ public class MainActivity extends Activity implements
                         else start();
                     }
                 } else {
-//                    Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
-//                            userAlarmLocation.latitude, userAlarmLocation.longitude, distanceBetween);
-                    distanceBetween = mLastLocation.distanceTo(targetLocation);
-                    Log.i(TAG, "Inside addListenerOnButton()_2 Method targetLocation: " + targetLocation.getLatitude() + "," + targetLocation.getLongitude());
-                    setTargetLocation();
+                    if(targetLocation != null){
+                        distanceBetween = mLastLocation.distanceTo(targetLocation);
+                        Log.i(TAG, "Inside addListenerOnButton()_2 Method targetLocation: " + targetLocation.getLatitude() + "," + targetLocation.getLongitude());
+                        setTargetLocation();
 
-                    if (distanceBetween < MINIMUM_DISTANCE) tooClose();
-                    else start();
+                        if (distanceBetween < MINIMUM_DISTANCE) tooClose();
+                        else start();
+                    }
+                    else{
+                        Toast.makeText(context, "Oops, something happened. Please try again :)", Toast.LENGTH_SHORT).show();
+                    }
+
 
                 }
             }
@@ -175,8 +178,6 @@ public class MainActivity extends Activity implements
             @Override
             public void onClick(View v) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                //builder.setTitle("");
-
                 // Set up the input
                 final EditText input = new EditText(context);
                 // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
@@ -189,13 +190,15 @@ public class MainActivity extends Activity implements
                     public void onClick(DialogInterface dialog, int which) {
                         m_Text = input.getText().toString();
                         userAlarmLocation = getLocationFromAddress(m_Text);
+                        if (userAlarmLocation != null) {
+                            setTargetLocation();
+                            mMap.addMarker(new MarkerOptions()
+                                    .position(userAlarmLocation)
+                                    .draggable(false));
+                        } else {
+                            Toast.makeText(context, "Unable to find "+m_Text, Toast.LENGTH_SHORT).show();
+                        }
 
-//                        Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
-//                                userAlarmLocation.latitude, userAlarmLocation.longitude, distanceBetween);
-
-                        mMap.addMarker(new MarkerOptions()
-                                .position(getLocationFromAddress(m_Text))
-                                .draggable(false));
                     }
                 });
                 builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -278,7 +281,7 @@ public class MainActivity extends Activity implements
         mLastLocation_LtLn = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
 
         // Animates camera to include both points hopefully :P
-        LatLngBounds pos = new LatLngBounds(mLastLocation_LtLn,userAlarmLocation);
+        LatLngBounds pos = new LatLngBounds(userAlarmLocation,mLastLocation_LtLn);
         mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(pos, 0));
     }
 
