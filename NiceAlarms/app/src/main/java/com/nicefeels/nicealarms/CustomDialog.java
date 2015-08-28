@@ -7,10 +7,6 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.google.android.gms.maps.GoogleMap;
-
-import java.util.Map;
-
 
 public class CustomDialog extends Dialog implements android.view.View.OnClickListener {
     public Activity c;
@@ -48,13 +44,13 @@ public class CustomDialog extends Dialog implements android.view.View.OnClickLis
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_yes:
+                dismiss();
+                //c.onBackPressed();
+                break;
+            case R.id.btn_no:
                 MainActivity.marker = false;
                 MainActivity.mMap.clear();
                 dismiss();
-                break;
-            case R.id.btn_no:
-                dismiss();
-                //c.onBackPressed();
                 break;
             default:
                 break;

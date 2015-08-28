@@ -131,32 +131,32 @@ public class MainActivity extends Activity implements
             @Override
             public void onClick(View arg0) {
                 if (mLastLocation == null) {
-                    Log.i(TAG, "No location yet");
-                    if (mMap.getMyLocation() == null) {
-                        mLastLocation = locationMan.getLastKnownLocation(provider);
-                    }
-                    else {
-                        //mLastLocation = mMap.getMyLocation();
-                        mLastLocation = locationMan.getLastKnownLocation(provider);
-                        Log.i(TAG,"mLastionLocation in Main: "+mLastLocation.getLatitude()+","+mLastLocation.getLongitude());
-                        Log.i(TAG,"targetLocation in Main: "+targetLocation.getLatitude()+","+targetLocation.getLongitude());
-                        distanceBetween = mLastLocation.distanceTo(targetLocation);
-                        Log.i(TAG, "Inside addListenerOnButton()_1 Method targetLocation: " + targetLocation.getLatitude() + "," + targetLocation.getLongitude());
-                        setTargetLocation();
-
-                        if (distanceBetween < MINIMUM_DISTANCE) tooClose();
-                        else start();
-                    }
+//                    Log.i(TAG, "No location yet");
+//                    if (mMap.getMyLocation() == null) {
+//                        mLastLocation = locationMan.getLastKnownLocation(provider);
+//                    }
+//                    else {
+//                        //mLastLocation = mMap.getMyLocation();
+//                        mLastLocation = locationMan.getLastKnownLocation(provider);
+//                        Log.i(TAG,"mLastionLocation in Main: "+mLastLocation.getLatitude()+","+mLastLocation.getLongitude());
+//                        Log.i(TAG,"targetLocation in Main: "+targetLocation.getLatitude()+","+targetLocation.getLongitude());
+//                        distanceBetween = mLastLocation.distanceTo(targetLocation);
+//                        Log.i(TAG, "Inside addListenerOnButton()_1 Method targetLocation: " + targetLocation.getLatitude() + "," + targetLocation.getLongitude());
+//                        setTargetLocation();
+//
+//                        if (distanceBetween < MINIMUM_DISTANCE) tooClose();
+//                        else start();
+//                    }
+                    Toast.makeText(context, "Unable to get location. Please Try again.", Toast.LENGTH_SHORT).show();
                 } else {
-                    if(targetLocation != null){
+                    if (targetLocation != null) {
                         distanceBetween = mLastLocation.distanceTo(targetLocation);
                         Log.i(TAG, "Inside addListenerOnButton()_2 Method targetLocation: " + targetLocation.getLatitude() + "," + targetLocation.getLongitude());
-                        setTargetLocation();
+                        //setTargetLocation();
 
                         if (distanceBetween < MINIMUM_DISTANCE) tooClose();
                         else start();
-                    }
-                    else{
+                    } else {
                         Toast.makeText(context, "Oops, something happened. Please try again :)", Toast.LENGTH_SHORT).show();
                     }
 
@@ -195,8 +195,29 @@ public class MainActivity extends Activity implements
                             mMap.addMarker(new MarkerOptions()
                                     .position(userAlarmLocation)
                                     .draggable(false));
+                            LatLngBounds pos;
+                            // Animates camera to include both points hopefully :P
+                            if(userAlarmLocation.latitude < mLastLocation.getLatitude())
+                                pos = new LatLngBounds(userAlarmLocation,mLastLocation_LtLn);
+                            else
+                                pos = new LatLngBounds(mLastLocation_LtLn,userAlarmLocation);
+                            LatLng temp = midPoint(userAlarmLocation.latitude,userAlarmLocation.longitude,
+                                    mLastLocation_LtLn.latitude,mLastLocation_LtLn.longitude);
+                            float dist = mLastLocation.distanceTo(targetLocation) / 1000;
+                            int zoom = 15;
+
+                            if ( dist < 2) zoom = 10;
+                            else if (dist < 5) zoom = 13;
+                            else if (dist < 20) zoom = 11;
+                            else if(dist < 100) zoom = 10;
+                            else if(dist > 200) zoom = 8;
+                            else if(dist > 10000) zoom = 3;
+
+                            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(temp, zoom);
+                            mMap.animateCamera(cameraUpdate);
+                            //mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(pos, 1));
                         } else {
-                            Toast.makeText(context, "Unable to find "+m_Text, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, "Unable to find " + m_Text, Toast.LENGTH_SHORT).show();
                         }
 
                     }
@@ -280,9 +301,7 @@ public class MainActivity extends Activity implements
         Toast.makeText(this, "Alarm Set", Toast.LENGTH_SHORT).show();
         mLastLocation_LtLn = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
 
-        // Animates camera to include both points hopefully :P
-        LatLngBounds pos = new LatLngBounds(userAlarmLocation,mLastLocation_LtLn);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(pos, 0));
+
     }
 
     /***
@@ -316,6 +335,31 @@ public class MainActivity extends Activity implements
     }
 
     /**
+     *
+     *  Found on here
+     * http://stackoverflow.com/questions/4656802/midpoint-between-two-latitude-and-longitude
+     */
+    public LatLng midPoint(double lat1,double lon1,double lat2,double lon2){
+
+        double dLon = Math.toRadians(lon2 - lon1);
+        double result[] = new double[2];
+
+        //convert to radians
+        lat1 = Math.toRadians(lat1);
+        lat2 = Math.toRadians(lat2);
+        lon1 = Math.toRadians(lon1);
+
+        double Bx = Math.cos(lat2) * Math.cos(dLon);
+        double By = Math.cos(lat2) * Math.sin(dLon);
+        result[0] = Math.atan2(Math.sin(lat1) + Math.sin(lat2), Math.sqrt((Math.cos(lat1) + Bx) * (Math.cos(lat1) + Bx) + By * By));
+        result[1] = lon1 + Math.atan2(By, Math.cos(lat1) + Bx);
+
+        //print out in degrees
+        Log.i(TAG,Math.toDegrees( result[0]) + " " + Math.toDegrees(result[1]));
+        return new LatLng(Math.toDegrees( result[0]),Math.toDegrees(result[1]));
+    }
+
+    /**
      * Handles A long press on the screen
      * @param point
      */
@@ -327,7 +371,7 @@ public class MainActivity extends Activity implements
                     .draggable(false));
             markerClicked = false;
             marker = true;
-            CustomDialog dialog = new CustomDialog(this,"Would you like to replace the tag?");
+            CustomDialog dialog = new CustomDialog(this,"Are you sure?");
             dialog.show();
             userAlarmLocation = point;
         }

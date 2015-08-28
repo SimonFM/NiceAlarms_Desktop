@@ -38,6 +38,13 @@ public class Alarm extends BroadcastReceiver {
 
 
     private float newDist;// = new float[4];
+
+    /***
+     * This is a method that is run automatically on creation of the app and runs when the app starts
+     * and also at whatever interval you set it to run at.
+     * @param context
+     * @param intent
+     */
     @Override
     public void onReceive(Context context, Intent intent) {
         locationMan = (LocationManager)context.getSystemService(context.LOCATION_SERVICE);
@@ -60,16 +67,20 @@ public class Alarm extends BroadcastReceiver {
 
     }
 
+    /***
+     * This method handles the checking of the distance and displaying of messages.
+     * @param context
+     */
     private void alarmMethod(Context context){
 
         if(MainActivity.targetLocation == null){
             Log.i(TAG, "User hasnt picked a location");
         }
         else{
-            Log.i(TAG,"Inside Alarm Method mLocation: "+mLastLocation.getLatitude()+","+mLastLocation.getLongitude());
-            Log.i(TAG,"Inside Alarm Method targetLocation: "+MainActivity.targetLocation.getLatitude()+","+MainActivity.targetLocation.getLongitude());
+//            Log.i(TAG,"Inside Alarm Method mLocation: "+mLastLocation.getLatitude()+","+mLastLocation.getLongitude());
+//            Log.i(TAG,"Inside Alarm Method targetLocation: "+MainActivity.targetLocation.getLatitude()+","+MainActivity.targetLocation.getLongitude());
             newDist = mLastLocation.distanceTo(MainActivity.targetLocation);
-            Log.i(TAG, "Distance: " + newDist );//+ MainActivity.distanceBetween[0]);
+//            Log.i(TAG, "Distance: " + newDist );//+ MainActivity.distanceBetween[0]);
 
             // if the distance is less than MINIMUM ring the alarm,
             // otherwise display the distance
@@ -77,9 +88,16 @@ public class Alarm extends BroadcastReceiver {
                 LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
                 CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
                 MainActivity.mMap.animateCamera(cameraUpdate);
-                Log.i(TAG, "Distance: " + newDist / 1000 +"m");
-                float shavedDist = newDist / 1000;
-                Toast.makeText(context, "Distance: " +  shavedDist +"m", Toast.LENGTH_SHORT).show();
+//                Log.i(TAG, "Distance: " + newDist / 1000 +"m");
+
+                if( newDist < 1000){
+                    Toast.makeText(context, "Distance: " +  newDist +"m", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    //float truncatedDist = newDist / 1000;
+                    Toast.makeText(context, "Distance: " +  newDist / 1000 +"km", Toast.LENGTH_SHORT).show();
+                }
+
             }
             else{
                 Toast.makeText(context, "You're There!", Toast.LENGTH_LONG).show();
