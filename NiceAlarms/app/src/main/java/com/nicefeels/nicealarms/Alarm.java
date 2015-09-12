@@ -87,16 +87,18 @@ public class Alarm extends BroadcastReceiver {
             if (newDist > MINIMUM_DISTANCE) {
                 LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
                 CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
-                MainActivity.mMap.animateCamera(cameraUpdate);
+                MainActivity.animateMap(cameraUpdate);
 //                Log.i(TAG, "Distance: " + newDist / 1000 +"m");
 
-                if( newDist < 1000){
-                    Toast.makeText(context, "Distance: " +  newDist +"m", Toast.LENGTH_SHORT).show();
-                }
-                else {
+//                if( newDist < MINIMUM_DISTANCE){
+//                    Toast.makeText(context, "Distance: " +  newDist +"m", Toast.LENGTH_SHORT).show();
+//                    Log.i(TAG, "Distance: " + newDist +"m" );//+ MainActivity.distanceBetween[0]);
+//                }
+//                else {
                     //float truncatedDist = newDist / 1000;
+                    Log.i(TAG, "Distance: " + newDist +"m..." );//+ MainActivity.distanceBetween[0]);
                     Toast.makeText(context, "Distance: " +  newDist / 1000 +"km", Toast.LENGTH_SHORT).show();
-                }
+//                }
 
             }
             else{

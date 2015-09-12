@@ -18,7 +18,8 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name=".MainActivity"
-            android:label="Nice Alarms" >
+            android:label="Nice Alarms"
+            android:screenOrientation="portrait">
         </activity>
 
         <meta-data
@@ -38,10 +39,6 @@
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".RingAlarm"
-            android:exported="false" />
-
         <activity
             android:name=".HowTo"
             android:label="@string/title_activity_how_to" >
@@ -53,6 +50,8 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.nicefeels.nicealarms.MainActivity" />
         </activity>
+        <service android:enabled="true" android:name= ".AlarmService" />
+        <receiver android:name=".AlarmBroadcast"></receiver>
     </application>
 
 </manifest>

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.FragmentManager;
+import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -16,6 +17,8 @@ import android.location.LocationManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.text.InputType;
 import android.util.Log;
 import android.view.View;
@@ -54,10 +57,12 @@ public class MainActivity extends Activity implements
     private static final float MIN_DISTANCE = 1000;
     private final int SPLASH_DISPLAY_LENGTH = 1000;            //set your time here......
 
+
+
     /**
      * Instance variables
      */
-    private Context context;
+    private final Context context = this;
     public static LatLng userAlarmLocation;
     public static GoogleApiClient mGoogleApiClient;
     public static Button locationButton, resetButton, searchButton;
@@ -75,6 +80,8 @@ public class MainActivity extends Activity implements
     public static String provider;
     private String m_Text = "";
     public static Location targetLocation;
+    private Intent mServiceIntent;
+    static Handler mHandler;
 
 
     /***
@@ -85,7 +92,7 @@ public class MainActivity extends Activity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         buildGoogleApiClient();
-        context = this;
+        //context = this;
         locationMan = (LocationManager)getSystemService(LOCATION_SERVICE);
         criteria = new Criteria();
         provider = locationMan.getBestProvider(criteria, true);
@@ -103,15 +110,32 @@ public class MainActivity extends Activity implements
             }
         }, SPLASH_DISPLAY_LENGTH);
 
+        mHandler = new Handler(Looper.getMainLooper()) {
+            @Override
+            public void handleMessage(Message message) {
+                // This is where you do your work in the UI thread.
+                // Your worker tells you in the message what to do.
+            }
+        };
+
+        //UIHandler = new Handler(Looper.getMainLooper());
+
         if(mLastLocation != null) {
             mLastLocation_LtLn = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
             CameraUpdate userLocation = CameraUpdateFactory.newLatLngZoom(mLastLocation_LtLn, DEFAULT_ZOOM);
             mMap.animateCamera(userLocation);
         }
+        else if (mMap.getMyLocation() != null) {
+            mLastLocation = mMap.getMyLocation();
+        }
         else{
-            Toast.makeText(context, "Unable to get location", Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "Unable to get location, ERROR 1", Toast.LENGTH_LONG).show();
         }
     }
+
+//    public static void runOnUI(Runnable runnable) {
+//        UIHandler.post(runnable);
+//    }
 
     /***
      * A method that adds the various buttons to the activity. If the reset button is pressed,
@@ -125,39 +149,44 @@ public class MainActivity extends Activity implements
         resetButton = (Button) findViewById(R.id.resetButton);
         searchButton = (Button) findViewById(R.id.searchButton);
 
-        Intent alarmIntent = new Intent(MainActivity.this, Alarm.class);
-        pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, alarmIntent, 0);
+        Intent alarmIntent = new Intent(getActivity(), Alarm.class);
+        Intent alarmBroadcast = new Intent(getActivity(), AlarmBroadcast.class);
+        mServiceIntent = new Intent(getActivity(), AlarmService.class);
+//        pendingIntent = PendingIntent.getBroadcast(getActivity(), 0, alarmIntent, 0);
+       // pendingIntent = PendingIntent.getBroadcast(getActivity(), 0, mServiceIntent, 0);
+        pendingIntent = PendingIntent.getBroadcast(getActivity(), 0, alarmBroadcast, 0);
+
+        //mServiceIntent.setData(Uri.parse(dataUrl));
         locationButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View arg0) {
                 if (mLastLocation == null) {
-//                    Log.i(TAG, "No location yet");
-//                    if (mMap.getMyLocation() == null) {
-//                        mLastLocation = locationMan.getLastKnownLocation(provider);
-//                    }
-//                    else {
-//                        //mLastLocation = mMap.getMyLocation();
-//                        mLastLocation = locationMan.getLastKnownLocation(provider);
-//                        Log.i(TAG,"mLastionLocation in Main: "+mLastLocation.getLatitude()+","+mLastLocation.getLongitude());
-//                        Log.i(TAG,"targetLocation in Main: "+targetLocation.getLatitude()+","+targetLocation.getLongitude());
-//                        distanceBetween = mLastLocation.distanceTo(targetLocation);
-//                        Log.i(TAG, "Inside addListenerOnButton()_1 Method targetLocation: " + targetLocation.getLatitude() + "," + targetLocation.getLongitude());
-//                        setTargetLocation();
-//
-//                        if (distanceBetween < MINIMUM_DISTANCE) tooClose();
-//                        else start();
-//                    }
-                    Toast.makeText(context, "Unable to get location. Please Try again.", Toast.LENGTH_SHORT).show();
+                    if (mMap.getMyLocation() == null) {
+                        Toast.makeText(context, "Unable to get location. Please Try again.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        mLastLocation = mMap.getMyLocation();
+                        distanceBetween = mLastLocation.distanceTo(targetLocation);
+                        if (distanceBetween < MINIMUM_DISTANCE) tooClose();
+                        else {
+                            //startService(mServiceIntent);
+                            start();
+                        }
+                    }
+
                 } else {
                     if (targetLocation != null) {
                         distanceBetween = mLastLocation.distanceTo(targetLocation);
-                        Log.i(TAG, "Inside addListenerOnButton()_2 Method targetLocation: " + targetLocation.getLatitude() + "," + targetLocation.getLongitude());
+                        //Log.i(TAG, "Inside addListenerOnButton()_2 Method targetLocation: " + targetLocation.getLatitude() + "," + targetLocation.getLongitude());
                         //setTargetLocation();
 
                         if (distanceBetween < MINIMUM_DISTANCE) tooClose();
-                        else start();
+                        else {
+                            //startService(mServiceIntent);
+                            start();
+                        }
                     } else {
                         Toast.makeText(context, "Oops, something happened. Please try again :)", Toast.LENGTH_SHORT).show();
+                        mLastLocation = locationMan.getLastKnownLocation(provider);
                     }
 
 
@@ -170,6 +199,8 @@ public class MainActivity extends Activity implements
             public void onClick(View v) {
                 mMap.clear();
                 marker = false;
+                userAlarmLocation = null;
+                targetLocation = null;
                 cancel();
             }
         });
@@ -177,62 +208,74 @@ public class MainActivity extends Activity implements
         searchButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                // Set up the input
-                final EditText input = new EditText(context);
-                // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-                input.setInputType(InputType.TYPE_CLASS_TEXT);
-                builder.setView(input);
+                if (mLastLocation != null) {
+                    searchFunction();
+                } else {
+                    Toast.makeText(context, "Oops, something happened. Please try again :), Error 2", Toast.LENGTH_SHORT).show();
+                    mLastLocation = locationMan.getLastKnownLocation(provider);
+                    searchFunction();
+                }
+            }
 
-                // Set up the buttons
-                builder.setPositiveButton("Search!", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        m_Text = input.getText().toString();
-                        userAlarmLocation = getLocationFromAddress(m_Text);
-                        if (userAlarmLocation != null) {
-                            setTargetLocation();
-                            mMap.addMarker(new MarkerOptions()
-                                    .position(userAlarmLocation)
-                                    .draggable(false));
-                            LatLngBounds pos;
-                            // Animates camera to include both points hopefully :P
-                            if(userAlarmLocation.latitude < mLastLocation.getLatitude())
-                                pos = new LatLngBounds(userAlarmLocation,mLastLocation_LtLn);
-                            else
-                                pos = new LatLngBounds(mLastLocation_LtLn,userAlarmLocation);
-                            LatLng temp = midPoint(userAlarmLocation.latitude,userAlarmLocation.longitude,
-                                    mLastLocation_LtLn.latitude,mLastLocation_LtLn.longitude);
-                            float dist = mLastLocation.distanceTo(targetLocation) / 1000;
-                            int zoom = 15;
 
-                            if ( dist < 2) zoom = 10;
-                            else if (dist < 5) zoom = 13;
-                            else if (dist < 20) zoom = 11;
-                            else if(dist < 100) zoom = 10;
-                            else if(dist > 200) zoom = 8;
-                            else if(dist > 10000) zoom = 3;
+        });
+    }
 
-                            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(temp, zoom);
-                            mMap.animateCamera(cameraUpdate);
-                            //mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(pos, 1));
-                        } else {
-                            Toast.makeText(context, "Unable to find " + m_Text, Toast.LENGTH_SHORT).show();
-                        }
+    public void searchFunction(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        // Set up the input
+        final EditText input = new EditText(context);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
 
-                    }
-                });
-                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                        m_Text = "";
-                    }
-                });
+        // Set up the buttons
+        builder.setPositiveButton("Search!", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                m_Text = input.getText().toString();
+                userAlarmLocation = getLocationFromAddress(m_Text);
 
-                builder.show();
+                if (userAlarmLocation != null) {
+                    setTargetLocation();
+                    mMap.addMarker(new MarkerOptions()
+                            .position(userAlarmLocation)
+                            .draggable(false));
+                    LatLngBounds pos;
+                    // Animates camera to include both points hopefully :P
+                    if (userAlarmLocation.latitude < mLastLocation.getLatitude())
+                        pos = new LatLngBounds(userAlarmLocation, mLastLocation_LtLn);
+                    else
+                        pos = new LatLngBounds(mLastLocation_LtLn, userAlarmLocation);
+                    LatLng temp = midPoint(userAlarmLocation.latitude, userAlarmLocation.longitude,
+                            mLastLocation_LtLn.latitude, mLastLocation_LtLn.longitude);
+                    float dist = mLastLocation.distanceTo(targetLocation) / 1000;
+                    int zoom = 15;
+
+                    if (dist < 2) zoom = 10;
+                    else if (dist < 5) zoom = 13;
+                    else if (dist < 20) zoom = 11;
+                    else if (dist < 100) zoom = 10;
+                    else if (dist > 200) zoom = 8;
+                    else if (dist > 10000) zoom = 3;
+
+                    CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(temp, zoom);
+                    mMap.animateCamera(cameraUpdate);
+                    //mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(pos, 1));
+                } else {
+                    Toast.makeText(context, "Unable to find " + m_Text, Toast.LENGTH_SHORT).show();
+                }
             }
         });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+                m_Text = "";
+            }
+        });
+
+        builder.show();
     }
 
     public void setTargetLocation(){
@@ -283,6 +326,16 @@ public class MainActivity extends Activity implements
     }
 
     /***
+     * Returns the current activity
+     * @return
+     */
+    public Activity getActivity(){
+        return MainActivity.this;
+    }
+
+
+
+    /***
      * A method that cancells the alarm that was set and displays a message saying
      * this to the user.
      */
@@ -297,11 +350,15 @@ public class MainActivity extends Activity implements
      */
     public void start() {
         manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        manager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 5000, pendingIntent);
+        manager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 300, pendingIntent);
         Toast.makeText(this, "Alarm Set", Toast.LENGTH_SHORT).show();
         mLastLocation_LtLn = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
 
 
+    }
+
+    public static void animateMap(CameraUpdate cm){
+       mMap.animateCamera(cm);
     }
 
     /***
