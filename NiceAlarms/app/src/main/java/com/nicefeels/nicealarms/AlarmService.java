@@ -147,25 +147,16 @@ public class AlarmService extends Service {
             // if the distance is less than MINIMUM ring the alarm,
             // otherwise display the distance
             if (newDist > MINIMUM_DISTANCE) {
-                MainActivity.mp.start();
                 LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
                 CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
                 //MainActivity.animateMap(cameraUpdate);
 
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext())
-                        .setSmallIcon(R.drawable.alarm)
-                        .setContentTitle("Nice Alarms")
-                        .setContentText("Distance: " + newDist + "m")
-                        .setSound(soundUri); //This sets the sound to play
-                notificationManager.notify(0, mBuilder.build());
-
                 Log.i(TAG, "Distance: " + newDist + "m...");//+ MainActivity.distanceBetween[0]);
-                mHandler.post(new ToastRunnable("Distance: " + newDist+ "m"));
+               // mHandler.post(new ToastRunnable("Distance: " + newDist+ "m"));
             } else {
                 mHandler.post(new ToastRunnable("You're There!"));
                 //Toast.makeText(context, "You're There!", Toast.LENGTH_LONG).show();
-                MainActivity.mp.start();
-                v.vibrate(pattern, -1); //-1 is important
+
                 manager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
                 manager.cancel(MainActivity.pendingIntent);
 
@@ -174,6 +165,7 @@ public class AlarmService extends Service {
                         .setContentTitle("Destination Reached")
                         .setContentText("You're there!")
                         .setSound(soundUri); //This sets the sound to play
+                v.vibrate(pattern, -1); //-1 is important
                 notificationManager.notify(0, mBuilder.build());
 
             }

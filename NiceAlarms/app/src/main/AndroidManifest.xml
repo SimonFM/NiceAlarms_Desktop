@@ -43,13 +43,6 @@
             android:name=".HowTo"
             android:label="@string/title_activity_how_to" >
         </activity>
-        <activity
-            android:name=".MapsActivity"
-            android:label="@string/title_activity_maps" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.nicefeels.nicealarms.MainActivity" />
-        </activity>
         <service android:enabled="true"
                  android:name = ".AlarmService"
                  android:label ="@string/app_name"/>

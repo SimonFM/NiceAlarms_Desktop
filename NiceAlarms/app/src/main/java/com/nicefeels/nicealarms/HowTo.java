@@ -2,6 +2,7 @@ package com.nicefeels.nicealarms;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -16,6 +17,7 @@ public class HowTo extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_how_to);
         addOkayButton();
     }
@@ -29,7 +31,7 @@ public class HowTo extends Activity {
             @Override
             public void onClick(View arg0) {
                 Intent myIntent = new Intent(HowTo.this, MainActivity.class);
-                Log.i(TAG, "About to launch MainActivity");
+                Log.i(TAG, "About to launch MainActivity from HowTo");
                 startActivity(myIntent);
                 finish();
             }

@@ -9,6 +9,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Address;
 import android.location.Criteria;
 import android.location.Geocoder;
@@ -105,12 +106,6 @@ public class MainActivity extends Activity implements
         addListenerOnButton();
         setUpMap();
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-            }
-        }, SPLASH_DISPLAY_LENGTH);
 
         if(mLastLocation != null) {
             mLastLocation_LtLn = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
@@ -343,6 +338,16 @@ public class MainActivity extends Activity implements
         mLastLocation_LtLn = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
 
 
+    }
+
+    @Override
+    protected void onPause(){
+        super.onPause();
+        SharedPreferences settings = getSharedPreferences("Nice Alarms",Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.clear();
+        editor.putBoolean("firstRun_NiceAlarms", false);
+        editor.commit();
     }
 
     public static void animateMap(CameraUpdate cm){
