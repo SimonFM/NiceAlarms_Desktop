@@ -2,17 +2,23 @@ package com.nicefeels.nicealarms;
 
 import android.app.AlarmManager;
 import android.app.IntentService;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Vibrator;
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -48,19 +54,27 @@ public class AlarmService extends Service {
     private boolean created = false;
     private Handler mHandler;
     private Context contextAct;
+    private  Uri soundUri;
+    NotificationManager notificationManager;
 
-    public AlarmService(Context context){
-        contextAct = context;
+
+    public AlarmService(){}
+
+    public AlarmService(Context cnxt){
+        this.contextAct = cnxt;
     }
 
     @Override
     public void onCreate() {
+        Log.i(TAG,"Hey Service onCreate()");
         int i = 0;
         this.context = this;//.getApplication().startActivity(MainActivity.class);
         this.isRunning = false;
         //if(created == true)
         this.backgroundThread = new Thread(myTask);
         created = true;
+        notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
     }
 
     private Runnable myTask = new Runnable() {
@@ -76,7 +90,7 @@ public class AlarmService extends Service {
             v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
 
             if(mLastLocation != null){
-                Log.i(TAG,"Inside Alarm: "+mLastLocation.getLatitude()+","+mLastLocation.getLongitude());
+                //Log.i(TAG,"Inside Alarm: "+mLastLocation.getLatitude()+","+mLastLocation.getLongitude());
                 alarmMethod(context);
             }
             else if(MainActivity.mMap.getMyLocation() != null){
@@ -106,7 +120,9 @@ public class AlarmService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.i(TAG,"Hey onStartCommand");
         if(!this.isRunning) {
+            Log.i(TAG,"Hey onStartCommand, inside if");
             this.mHandler = new Handler();
             this.isRunning = true;
             this.backgroundThread.start();
@@ -120,23 +136,31 @@ public class AlarmService extends Service {
      * @param context
      */
     private void alarmMethod(Context context){
-
+        Log.i(TAG, "Hey The alarm method was started");
         if(MainActivity.targetLocation == null){
             Log.i(TAG, "User hasnt picked a location");
         }
         else{
             newDist = mLastLocation.distanceTo(MainActivity.targetLocation);
-            Log.i(TAG, "Distance: " + newDist);//+ MainActivity.distanceBetween[0]);
+            //Log.i(TAG, "Distance: " + newDist);//+ MainActivity.distanceBetween[0]);
 
             // if the distance is less than MINIMUM ring the alarm,
             // otherwise display the distance
             if (newDist > MINIMUM_DISTANCE) {
+                MainActivity.mp.start();
                 LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
                 CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
                 //MainActivity.animateMap(cameraUpdate);
 
+                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext())
+                        .setSmallIcon(R.drawable.alarm)
+                        .setContentTitle("Nice Alarms")
+                        .setContentText("Distance: " + newDist + "m")
+                        .setSound(soundUri); //This sets the sound to play
+                notificationManager.notify(0, mBuilder.build());
+
                 Log.i(TAG, "Distance: " + newDist + "m...");//+ MainActivity.distanceBetween[0]);
-                mHandler.post(new ToastRunnable("Distance: " + newDist / 1000 + "km"));
+                mHandler.post(new ToastRunnable("Distance: " + newDist+ "m"));
             } else {
                 mHandler.post(new ToastRunnable("You're There!"));
                 //Toast.makeText(context, "You're There!", Toast.LENGTH_LONG).show();
@@ -145,10 +169,16 @@ public class AlarmService extends Service {
                 manager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
                 manager.cancel(MainActivity.pendingIntent);
 
+                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext())
+                        .setSmallIcon(R.drawable.alarm)
+                        .setContentTitle("Destination Reached")
+                        .setContentText("You're there!")
+                        .setSound(soundUri); //This sets the sound to play
+                notificationManager.notify(0, mBuilder.build());
+
             }
         }
     }
-
 
     /**
      * Solution to use Toast inside a service:

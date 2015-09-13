@@ -40,6 +40,7 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import java.util.Calendar;
 import java.util.List;
 
 public class MainActivity extends Activity implements
@@ -50,12 +51,14 @@ public class MainActivity extends Activity implements
      * Constants
      */
     //private final LatLng TEST_LOCATION = new LatLng(53.3096163, -6.3123088);
-    public final static String TAG = "NiceFeelsApp";
+    public final String TAG = "NiceFeelsApp";
     public final int MINIMUM_DISTANCE = 1000;
     private final int DEFAULT_ZOOM = 14;
-    private static final long MIN_TIME = 400;
-    private static final float MIN_DISTANCE = 1000;
+    private final int SECONDS = 1;
+    private final long MIN_TIME = 1000 * SECONDS;
+    private final float MIN_DISTANCE = 1000;
     private final int SPLASH_DISPLAY_LENGTH = 1000;            //set your time here......
+    private Calendar mCal;
 
 
 
@@ -98,7 +101,6 @@ public class MainActivity extends Activity implements
         provider = locationMan.getBestProvider(criteria, true);
         mLastLocation = locationMan.getLastKnownLocation(provider);
         mp = MediaPlayer.create(this, R.raw.chime);
-
         setContentView(R.layout.activity_main);
         addListenerOnButton();
         setUpMap();
@@ -109,16 +111,6 @@ public class MainActivity extends Activity implements
             public void run() {
             }
         }, SPLASH_DISPLAY_LENGTH);
-
-        mHandler = new Handler(Looper.getMainLooper()) {
-            @Override
-            public void handleMessage(Message message) {
-                // This is where you do your work in the UI thread.
-                // Your worker tells you in the message what to do.
-            }
-        };
-
-        //UIHandler = new Handler(Looper.getMainLooper());
 
         if(mLastLocation != null) {
             mLastLocation_LtLn = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
@@ -132,10 +124,6 @@ public class MainActivity extends Activity implements
             Toast.makeText(context, "Unable to get location, ERROR 1", Toast.LENGTH_LONG).show();
         }
     }
-
-//    public static void runOnUI(Runnable runnable) {
-//        UIHandler.post(runnable);
-//    }
 
     /***
      * A method that adds the various buttons to the activity. If the reset button is pressed,
@@ -350,7 +338,7 @@ public class MainActivity extends Activity implements
      */
     public void start() {
         manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        manager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 300, pendingIntent);
+        manager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), MIN_TIME, pendingIntent);
         Toast.makeText(this, "Alarm Set", Toast.LENGTH_SHORT).show();
         mLastLocation_LtLn = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
 

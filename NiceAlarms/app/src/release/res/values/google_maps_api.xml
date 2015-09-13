@@ -3,11 +3,11 @@
     TODO: Before you run your application, you need a Google Maps API key.
 
     To get one, follow this link, follow the directions and press "Create" at the end:
-
-https://console.developers.google.com/flows/enableapi?apiid=maps_android_backend&keyType=CLIENT_SIDE_ANDROID&r=BF:D2:DC:86:1D:B8:25:A0:D9:73:20:84:38:FC:A1:47:42:3A:A2:43;com.nicefeels.nicealarms
+       FF:40:97:8F:41:A3:DA:20:2B:E9:11:60:B6:F4:BC:DA:1D:6E:3C:73
+https://console.developers.google.com/flows/enableapi?apiid=maps_android_backend&keyType=CLIENT_SIDE_ANDROID&r=FF:40:97:8F:41:A3:DA:20:2B:E9:11:60:B6:F4:BC:DA:1D:6E:3C:73;com.nicefeels.nicealarms
     <!- This is the app one -->
     <string name="google_maps_key" translatable="false" templateMergeStrategy="preserve">
-        AIzaSyCZIs0nRwX5_foJ422AEZ39bM5oK6EN7LI
+        AIzaSyCRueDw-cHQ7v0LnLbmfc_LsRecOtoY1lg
     </string>
 
 </resources>
