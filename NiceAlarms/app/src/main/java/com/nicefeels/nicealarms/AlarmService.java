@@ -20,6 +20,7 @@ import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdate;
@@ -48,14 +49,14 @@ public class AlarmService extends Service {
     private Criteria criteria;
     private float newDist;// = new float[4];
 
-    private Context context = this;
+    private final Context context = this;
     private boolean isRunning;
     private Thread backgroundThread;
-    private boolean created = false;
     private Handler mHandler;
     private Context contextAct;
     private  Uri soundUri;
     NotificationManager notificationManager;
+    private TextView distanceView;
 
 
     public AlarmService(){}
@@ -68,40 +69,34 @@ public class AlarmService extends Service {
     public void onCreate() {
         Log.i(TAG,"Hey Service onCreate()");
         int i = 0;
-        this.context = this;//.getApplication().startActivity(MainActivity.class);
         this.isRunning = false;
-        //if(created == true)
+        this.notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        this.soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        this.locationMan = (LocationManager)context.getSystemService(context.LOCATION_SERVICE);
+        this.criteria = new Criteria();
         this.backgroundThread = new Thread(myTask);
-        created = true;
-        notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        this.distanceView = new TextView(getApplicationContext());
     }
-
     private Runnable myTask = new Runnable() {
         public void run() {
             Log.i(TAG, "Testing Service was created");
             //Toast.makeText(context, "Testing Service was created", Toast.LENGTH_LONG).show();
             // Gets data from the incoming Intent
-
-            locationMan = (LocationManager)context.getSystemService(context.LOCATION_SERVICE);
-            criteria = new Criteria();
             provider = locationMan.getBestProvider(criteria, true);
-            mLastLocation = locationMan.getLastKnownLocation(provider);
+            mLastLocation = MainActivity.mLastLocation;
             v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
 
             if(mLastLocation != null){
                 //Log.i(TAG,"Inside Alarm: "+mLastLocation.getLatitude()+","+mLastLocation.getLongitude());
                 alarmMethod(context);
             }
-            else if(MainActivity.mMap.getMyLocation() != null){
-                mLastLocation = MainActivity.mMap.getMyLocation();
+            else if(MainActivity.mMap != null){
+                mHandler.post(new FindLocation());
                 alarmMethod(context);
-            }
-            else{
-                Toast.makeText(context, "Unable to get location, ERROR 10", Toast.LENGTH_LONG).show();
+            } else {
+                //Toast.makeText(context, "Unable to get location, ERROR 10", Toast.LENGTH_LONG).show();
                 mHandler.post(new ToastRunnable("Unable to get location, ERROR 10"));
             }
-            stopSelf();
         }
     };
 
@@ -113,19 +108,24 @@ public class AlarmService extends Service {
 
     @Override
     public void onDestroy() {
-        // TODO Auto-generated method stub
         super.onDestroy();
+        Log.i(TAG,"Destroying Service");
         this.isRunning = false;
+        stopSelf();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG,"Hey onStartCommand");
+        Log.i(TAG, "Hey onStartCommand");
+
         if(!this.isRunning) {
             Log.i(TAG,"Hey onStartCommand, inside if");
             this.mHandler = new Handler();
             this.isRunning = true;
             this.backgroundThread.start();
+        }
+        else{
+            this.alarmMethod(context);
         }
         return START_STICKY;
     }
@@ -136,40 +136,46 @@ public class AlarmService extends Service {
      * @param context
      */
     private void alarmMethod(Context context){
-        Log.i(TAG, "Hey The alarm method was started");
-        if(MainActivity.targetLocation == null){
-            Log.i(TAG, "User hasnt picked a location");
-        }
-        else{
-            newDist = mLastLocation.distanceTo(MainActivity.targetLocation);
-            //Log.i(TAG, "Distance: " + newDist);//+ MainActivity.distanceBetween[0]);
+        if (this.isRunning){
+            mLastLocation = MainActivity.mLastLocation;
+            Log.i(TAG, "Hey The alarm method was started");
+            if(MainActivity.targetLocation == null){
+                Log.i(TAG, "User has not picked a location");
+            }
+            else{
+                newDist = mLastLocation.distanceTo(MainActivity.targetLocation);
+                // if the distance is less than MINIMUM ring the alarm,
+                // otherwise display the distance
+                if (newDist > MINIMUM_DISTANCE) {
+                    LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+                    CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
+                    this.mHandler.post(new AnimateCamera(cameraUpdate));
+                    Log.i(TAG, "Distance: " + newDist + "m...");//+ MainActivity.distanceBetween[0]);
+                   // this.mHandler.post(new ToastRunnable("Distance: " + newDist + "m"));
+                    this.mHandler.post(new updateLocation("Distance: " + newDist + "m"));
+                    this.notificationManager.notify(0,displayNotification(null,"Not there yet","Distance to stop: "+ newDist + "m").build());
+                } else {
+                    this.mHandler.post(new ToastRunnable("You're There!"));
+                    this.manager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+                    this.manager.cancel(MainActivity.pendingIntent);
 
-            // if the distance is less than MINIMUM ring the alarm,
-            // otherwise display the distance
-            if (newDist > MINIMUM_DISTANCE) {
-                LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-                CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
-                //MainActivity.animateMap(cameraUpdate);
-
-                Log.i(TAG, "Distance: " + newDist + "m...");//+ MainActivity.distanceBetween[0]);
-               // mHandler.post(new ToastRunnable("Distance: " + newDist+ "m"));
-            } else {
-                mHandler.post(new ToastRunnable("You're There!"));
-                //Toast.makeText(context, "You're There!", Toast.LENGTH_LONG).show();
-
-                manager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-                manager.cancel(MainActivity.pendingIntent);
-
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext())
-                        .setSmallIcon(R.drawable.alarm)
-                        .setContentTitle("Destination Reached")
-                        .setContentText("You're there!")
-                        .setSound(soundUri); //This sets the sound to play
-                v.vibrate(pattern, -1); //-1 is important
-                notificationManager.notify(0, mBuilder.build());
-
+                    this.notificationManager.notify(0, displayNotification(soundUri, "Destination Reached", "You're there!").build());
+                    this.v.vibrate(pattern, -1); //-1 is important
+                    stopSelf();
+                }
             }
         }
+        else{
+            Log.i(TAG, "ERROR 11");
+        }
+    }
+
+    private NotificationCompat.Builder displayNotification(Uri soundUri,String title, String messgae){
+        return new NotificationCompat.Builder(getApplicationContext())
+                .setSmallIcon(R.drawable.alarm)
+                .setContentTitle(title)
+                .setContentText(messgae)
+                .setSound(soundUri); //This sets the sound to play
     }
 
     /**
@@ -191,19 +197,38 @@ public class AlarmService extends Service {
             Toast.makeText(getApplicationContext(), mText, Toast.LENGTH_SHORT).show();
         }
     }
+    private class AnimateCamera implements Runnable{
 
-//    private  class ToastRunnable1 implements Runnable{
-//
-//        CameraUpdate mUpdate;
-//
-//        public ToastRunnable1(CameraUpdate up) {
-//            mUpdate = up;
-//        }
-//
-//        @Override
-//        public void run() {
-//            Context context = MainActivity.getActivity();
-//            context.
-//        }
-//    }
+        CameraUpdate mUpdate;
+
+        public AnimateCamera(CameraUpdate up) {
+            mUpdate = up;
+        }
+
+        @Override
+        public void run() {
+            Context context = getApplicationContext();
+            MainActivity.animateMap(mUpdate);
+        }
+    }
+    private class FindLocation implements Runnable{
+        public FindLocation() {}
+
+        @Override
+        public void run() {
+            mLastLocation = MainActivity.mMap.getMyLocation();
+        }
+    }
+
+    private class updateLocation implements Runnable{
+        private String distance;
+        public updateLocation(String d) {distance = d;}
+
+        @Override
+        public void run() {
+            MainActivity.distanceView.setText(distance);
+        }
+    }
+
+
 }

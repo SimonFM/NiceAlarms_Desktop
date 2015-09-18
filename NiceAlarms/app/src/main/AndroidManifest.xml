@@ -13,7 +13,7 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/alarm"
+        android:icon="@drawable/clock_light"
         android:label="Nice Alarms"
         android:theme="@style/AppTheme" >
         <activity

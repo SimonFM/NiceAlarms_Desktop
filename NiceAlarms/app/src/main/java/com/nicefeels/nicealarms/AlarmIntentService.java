@@ -16,6 +16,16 @@ public class AlarmIntentService extends IntentService {
         super(name);
     }
 
+    @Override
+    public void onCreate(){
+
+    }
+    @Override
+    public void onStart(Intent intent,int startId){
+
+    }
+
+
     public AlarmIntentService() {
         super("AlarmIntentService");
     }
@@ -24,4 +34,5 @@ public class AlarmIntentService extends IntentService {
     protected void onHandleIntent(Intent intent) {
 
     }
+
 }
