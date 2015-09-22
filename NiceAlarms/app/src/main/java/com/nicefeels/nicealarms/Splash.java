@@ -31,12 +31,6 @@ public class Splash extends Activity {
         context = this;
         new Handler().postDelayed(myTask, SPLASH_DISPLAY_LENGTH);
              /* Create an Intent that will start the Menu-Activity. */
-
-
-
-
-
-
     }
 
 
@@ -55,12 +49,6 @@ public class Splash extends Activity {
         public void run() {
             prefs = context.getSharedPreferences("Nice Alarms",Context.MODE_PRIVATE);
             editor = prefs.edit();
-
-//            editor.remove("Nice Alarms");
-//            editor.remove("firstRun");
-//            editor.commit();
-
-//            boolean firstRun = prefs.getBoolean("firstRun", false);
             boolean firstRun = prefs.contains("firstRun_NiceAlarms");
 
             Intent intent = new Intent(Splash.this, HowTo.class);

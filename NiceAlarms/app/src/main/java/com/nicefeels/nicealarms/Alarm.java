@@ -87,7 +87,7 @@ public class Alarm extends BroadcastReceiver {
             if (newDist > MINIMUM_DISTANCE) {
                 LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
                 CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
-                MainActivity.animateMap(cameraUpdate);
+                //MainActivity.animateMap(cameraUpdate);
 //                Log.i(TAG, "Distance: " + newDist / 1000 +"m");
 
 //                if( newDist < MINIMUM_DISTANCE){

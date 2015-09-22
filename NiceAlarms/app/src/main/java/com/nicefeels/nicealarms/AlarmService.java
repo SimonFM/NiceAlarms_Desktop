@@ -67,7 +67,7 @@ public class AlarmService extends Service {
 
     @Override
     public void onCreate() {
-        Log.i(TAG,"Hey Service onCreate()");
+        Log.i(TAG,"Hey ServiceIntent onCreate()");
         int i = 0;
         this.isRunning = false;
         this.notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -147,9 +147,9 @@ public class AlarmService extends Service {
                 // if the distance is less than MINIMUM ring the alarm,
                 // otherwise display the distance
                 if (newDist > MINIMUM_DISTANCE) {
-                    LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-                    CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
-                    this.mHandler.post(new AnimateCamera(cameraUpdate));
+//                    LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+//                    CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
+//                    //this.mHandler.post(new AnimateCamera(cameraUpdate));
                     Log.i(TAG, "Distance: " + newDist + "m...");//+ MainActivity.distanceBetween[0]);
                    // this.mHandler.post(new ToastRunnable("Distance: " + newDist + "m"));
                     this.mHandler.post(new updateLocation("Distance: " + newDist + "m"));
@@ -197,20 +197,20 @@ public class AlarmService extends Service {
             Toast.makeText(getApplicationContext(), mText, Toast.LENGTH_SHORT).show();
         }
     }
-    private class AnimateCamera implements Runnable{
-
-        CameraUpdate mUpdate;
-
-        public AnimateCamera(CameraUpdate up) {
-            mUpdate = up;
-        }
-
-        @Override
-        public void run() {
-            Context context = getApplicationContext();
-            MainActivity.animateMap(mUpdate);
-        }
-    }
+//    private class AnimateCamera implements Runnable{
+//
+//        CameraUpdate mUpdate;
+//
+//        public AnimateCamera(CameraUpdate up) {
+//            mUpdate = up;
+//        }
+//
+//        @Override
+//        public void run() {
+//            Context context = getApplicationContext();
+//            MainActivity.animateMap(mUpdate);
+//        }
+//    }
     private class FindLocation implements Runnable{
         public FindLocation() {}
 
