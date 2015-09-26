@@ -7,6 +7,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
@@ -15,6 +16,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.TextView;
@@ -38,6 +40,7 @@ public class AlarmIntentService extends IntentService implements
     private final String TAG = "NiceFeelsApp";
     private final int DEFAULT_ZOOM = 14;
     private final int MINIMUM_DISTANCE = 1000;
+    static final String STATE_IS_SET = "isSet";
     private Vibrator v;
     // Vibrate in this pattern
     // sleep, vibrate for 100ms, sleep for half a second, vibrate for 300ms
@@ -94,19 +97,23 @@ public class AlarmIntentService extends IntentService implements
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
     }
 
-    private Runnable myTask = new Runnable() {
-        public void run() {
-
-        }
-    };
-
     @Override
     public void onDestroy(){
         if (mGoogleApiClient.isConnected()) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
             mGoogleApiClient.disconnect();
         }
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putBoolean(STATE_IS_SET, false);
+        editor.commit();
+        MainActivity.alarmSet = false;
+        Log.i(TAG, "OH NO I HAVE BEEN KILLED");
+        super.onDestroy();
     }
+
+
+
     /***
      *
      */
@@ -123,7 +130,6 @@ public class AlarmIntentService extends IntentService implements
      *
      */
     private void alarmMethod(Context context){
-        //mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if(MainActivity.targetLocation == null){
                 Log.i(TAG, "User has not picked a location");
         }
@@ -156,6 +162,7 @@ public class AlarmIntentService extends IntentService implements
         this.manager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         this.manager.cancel(MainActivity.pendingIntent);
         Notification notThere = displayNotification(soundUri, "Destination Reached", "You're there!",true).build();
+        MainActivity.alarmSet = false;
 
         this.notificationManager.notify(0,notThere);
         this.v.vibrate(pattern, -1);
@@ -226,7 +233,8 @@ public class AlarmIntentService extends IntentService implements
     @Override
     public void onLocationChanged(Location location) {
         Log.i(TAG,"Sup, location has changed");
-        if((location != null)&&(location != mLastLocation)){
+        if((location != null)&&(location != mLastLocation)
+                &&(MainActivity.mMap != null)){
                 Log.i(TAG,"Location from Service: "+location.getLatitude()+","+location.getLongitude());
                 mLastLocation = location;
                 LatLng mLastLocation_LtLn = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());

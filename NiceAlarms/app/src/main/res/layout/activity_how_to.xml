@@ -16,22 +16,12 @@
         android:textColor="#010001"
         android:textSize="25dp" />
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:id="@+id/relativeLayout"
-        android:layout_alignBottom="@+id/HowTo_1">
-
-    </RelativeLayout>
-
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/imageView2"
         android:background="@drawable/hold_down_black"
-        android:layout_below="@+id/textView"
+        android:layout_below="@+id/HowToText"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="59dp" />
 
@@ -39,8 +29,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="and press &quot;Select Location&quot; to set the alarm."
-        android:id="@+id/textView"
+        android:text="and press the tick to set the alarm."
+        android:id="@+id/HowToText"
         android:layout_below="@+id/HowTo_1"
         android:layout_alignParentStart="true"
         android:textColor="#010001"
@@ -51,7 +41,7 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="Touch to Continue"
-        android:id="@+id/textView2"
+        android:id="@+id/HowToText_1"
         android:textColor="#010001"
         android:textSize="25dp"
         android:layout_below="@+id/imageView2"

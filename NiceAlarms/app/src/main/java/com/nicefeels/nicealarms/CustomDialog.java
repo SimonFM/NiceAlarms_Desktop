@@ -50,6 +50,7 @@ public class CustomDialog extends Dialog implements android.view.View.OnClickLis
             case R.id.btn_no:
                 MainActivity.marker = false;
                 MainActivity.mMap.clear();
+                MainActivity.distanceView.setText("Distance: 0m");
                 dismiss();
                 break;
             default:

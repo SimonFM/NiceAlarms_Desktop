@@ -75,7 +75,7 @@ public class MainActivity extends Activity implements
 
     //Google Things
     public static GoogleMap mMap;
-    public static boolean marker;
+    public static boolean marker, alarmSet;
     private GoogleApiClient mGoogleApiClient;
 
     //Locations
@@ -88,7 +88,7 @@ public class MainActivity extends Activity implements
     private final Context context = this;
     public static Button locationButton, resetButton, searchButton;
     public static ImageView locationImage, resetImage, searchImage;
-    private boolean markerClicked,alarmSet;
+    private boolean markerClicked;
     private String provider, m_Text = "";
     public static MediaPlayer mp;
     public static PendingIntent pendingIntent;
@@ -437,6 +437,7 @@ public class MainActivity extends Activity implements
     public void cancel() {
         manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         manager.cancel(pendingIntent);
+        distanceView.setText("Distance: 0m");
         alarmSet = false;
         Toast.makeText(this, "Alarm Cancelled", Toast.LENGTH_SHORT).show();
     }
@@ -497,26 +498,22 @@ public class MainActivity extends Activity implements
     }
 
 
-//    @Override
-//    public void onSaveInstanceState(Bundle savedInstanceState) {
-//        savedInstanceState.putString(STATE_USER_LOCATION,""+mLastLocation.getLatitude()+","+mLastLocation.getLongitude());
-//        savedInstanceState.putString(STATE_TARGET_LOCATION, ""+targetLocation.getLatitude()+","+targetLocation.getLongitude());
-//        savedInstanceState.putString(STATE_DISTANCE_VIEW, ""+distanceView.getText());
-//        savedInstanceState.putBoolean(STATE_IS_SET, alarmSet);
-//
-//        // Always call the superclass so it can save the view hierarchy state
-//        super.onSaveInstanceState(savedInstanceState);
-//    }
-
     @Override
     public void onDestroy(){
-        super.onDestroy();
         unregisterReceiver(uiUpdated);
-        manager.cancel(pendingIntent);
+        if( (manager != null)&&(pendingIntent != null) ){
+            manager.cancel(pendingIntent);
+            alarmSet = false;
+            settings = PreferenceManager.getDefaultSharedPreferences(this);
+            SharedPreferences.Editor editor = settings.edit();
+            editor.putBoolean(STATE_IS_SET, false);
+        }
+        super.onDestroy();
+
     }
 
     @Override
-    protected void onPause(){
+    protected void onPause() {
         super.onPause();
         Log.i(TAG,"**************************************************************");
         if (mGoogleApiClient.isConnected()) {
@@ -525,9 +522,12 @@ public class MainActivity extends Activity implements
         settings = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = settings.edit();
         Log.i(TAG, "PAUSED IN STOP");
-        editor.putBoolean("firstRun_NiceAlarms", false);
-        editor.putString(STATE_USER_LOCATION, "" + mLastLocation_LtLn.latitude + "," + mLastLocation_LtLn.longitude);
-        editor.putString(STATE_DISTANCE_VIEW, "" + distanceView.getText());
+        if((mLastLocation_LtLn!=null)&&(targetLocation!=null)){
+            editor.putBoolean("firstRun_NiceAlarms", false);
+            editor.putString(STATE_USER_LOCATION, "" + mLastLocation_LtLn.latitude + "," + mLastLocation_LtLn.longitude);
+            editor.putString(STATE_TARGET_LOCATION, "" + targetLocation.getLatitude() + "," + targetLocation.getLongitude());
+            editor.putBoolean(STATE_IS_SET, alarmSet);
+        }
         Log.i(TAG, "IS IT THERE?: " + settings.contains(STATE_USER_LOCATION));
         Log.i(TAG, "**************************************************************");
         editor.commit();
@@ -540,17 +540,20 @@ public class MainActivity extends Activity implements
     @Override
     protected void onStop(){
         super.onStop();
-        Log.i(TAG,"**************************************************************");
+        Log.i(TAG, "**************************************************************");
         if (mGoogleApiClient.isConnected()) {
             mGoogleApiClient.disconnect();
         }
-        settings = PreferenceManager.getDefaultSharedPreferences(this);
+        settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = settings.edit();
         Log.i(TAG, "PAUSED IN STOP");
-        editor.putBoolean("firstRun_NiceAlarms", false);
-        editor.putString(STATE_USER_LOCATION, "" + mLastLocation_LtLn.latitude + "," + mLastLocation_LtLn.longitude);
-        editor.putString(STATE_TARGET_LOCATION, "" + targetLocation.getLatitude() + "," + targetLocation.getLongitude());
-        editor.putBoolean(STATE_IS_SET, alarmSet);
+
+        if((mLastLocation_LtLn!=null)&&(targetLocation!=null)){
+            editor.putBoolean("firstRun_NiceAlarms", false);
+            editor.putString(STATE_USER_LOCATION, "" + mLastLocation_LtLn.latitude + "," + mLastLocation_LtLn.longitude);
+            editor.putString(STATE_TARGET_LOCATION, "" + targetLocation.getLatitude() + "," + targetLocation.getLongitude());
+            editor.putBoolean(STATE_IS_SET, alarmSet);
+        }
         Log.i(TAG, "IS IT THERE?: " + settings.contains(STATE_USER_LOCATION));
         Log.i(TAG, "**************************************************************");
         editor.commit();
@@ -563,7 +566,7 @@ public class MainActivity extends Activity implements
         super.onResume();
 
         String val = "null";
-        settings = PreferenceManager.getDefaultSharedPreferences(this);
+        settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         if(settings.contains(STATE_USER_LOCATION)){
             Log.i(TAG, "**************************************************************");
             String temp = settings.getString(STATE_USER_LOCATION, " It wasn't found");
@@ -589,7 +592,7 @@ public class MainActivity extends Activity implements
     protected void onRestart(){
         super.onRestart();
         String val = "null";
-        settings = PreferenceManager.getDefaultSharedPreferences(this);
+        settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         if(settings.contains(STATE_USER_LOCATION)){
             Log.i(TAG, "**************************************************************");
             String temp = settings.getString(STATE_USER_LOCATION, "It wasn't found");
