@@ -62,7 +62,9 @@ public class MainActivity extends Activity implements
     private final int SECONDS = 1;
     private final long MIN_TIME = 1000 * SECONDS;
     static final String STATE_USER_LOCATION = "mLastLocation";
-    static final String STATE_TARGET_LOCATION = "mTargetLocation";
+    static final String STATE_TARGET_LOCATION_LATITUDE = "mTargetLocation_Latitude";
+    static final String STATE_TARGET_LOCATION_LONGITUDE = "mTargetLocation_Longitude";
+    static final String STATE_MARKER = "marker";
     static final String STATE_DISTANCE_VIEW = "distanceView";
     static final String STATE_IS_SET = "isSet";
     /**
@@ -492,9 +494,12 @@ public class MainActivity extends Activity implements
     }
 
 
-    public void animateCamera(LatLng latLng){
-        CameraUpdate userLocation = CameraUpdateFactory.newLatLngZoom(mLastLocation_LtLn, DEFAULT_ZOOM);
-        mMap.animateCamera(userLocation);
+    SharedPreferences.Editor putDouble(final SharedPreferences.Editor edit, final String key, final double value) {
+        return edit.putLong(key, Double.doubleToRawLongBits(value));
+    }
+
+    double getDoubleSettings(final SharedPreferences prefs, final String key, final double defaultValue) {
+        return Double.longBitsToDouble(prefs.getLong(key, Double.doubleToLongBits(defaultValue)));
     }
 
 
@@ -525,13 +530,19 @@ public class MainActivity extends Activity implements
         if((mLastLocation_LtLn!=null)&&(targetLocation!=null)){
             editor.putBoolean("firstRun_NiceAlarms", false);
             editor.putString(STATE_USER_LOCATION, "" + mLastLocation_LtLn.latitude + "," + mLastLocation_LtLn.longitude);
-            editor.putString(STATE_TARGET_LOCATION, "" + targetLocation.getLatitude() + "," + targetLocation.getLongitude());
             editor.putBoolean(STATE_IS_SET, alarmSet);
+            editor.putBoolean(STATE_MARKER, marker);
+            putDouble(editor, STATE_TARGET_LOCATION_LATITUDE, targetLocation.getLatitude());
+            putDouble(editor, STATE_TARGET_LOCATION_LONGITUDE, targetLocation.getLongitude());
         }
-        Log.i(TAG, "IS IT THERE?: " + settings.contains(STATE_USER_LOCATION));
+        Log.i(TAG, "IS IT THERE?: " + settings.contains(STATE_TARGET_LOCATION_LATITUDE));
+        Log.i(TAG, "**************************************************************");
+        Log.i(TAG, "IS IT THERE?: " + settings.contains(STATE_TARGET_LOCATION_LONGITUDE));
         Log.i(TAG, "**************************************************************");
         editor.commit();
-        Log.i(TAG, "IS IT THERE?: " + settings.contains(STATE_USER_LOCATION));
+        Log.i(TAG, "IS IT THERE?: " + settings.contains(STATE_TARGET_LOCATION_LATITUDE));
+        Log.i(TAG, "**************************************************************");
+        Log.i(TAG, "IS IT THERE?: " + settings.contains(STATE_TARGET_LOCATION_LONGITUDE));
         Log.i(TAG, "**************************************************************");
     }
 
@@ -540,49 +551,65 @@ public class MainActivity extends Activity implements
     @Override
     protected void onStop(){
         super.onStop();
-        Log.i(TAG, "**************************************************************");
-        if (mGoogleApiClient.isConnected()) {
-            mGoogleApiClient.disconnect();
-        }
         settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        SharedPreferences.Editor editor = settings.edit();
-        Log.i(TAG, "PAUSED IN STOP");
-
-        if((mLastLocation_LtLn!=null)&&(targetLocation!=null)){
-            editor.putBoolean("firstRun_NiceAlarms", false);
-            editor.putString(STATE_USER_LOCATION, "" + mLastLocation_LtLn.latitude + "," + mLastLocation_LtLn.longitude);
-            editor.putString(STATE_TARGET_LOCATION, "" + targetLocation.getLatitude() + "," + targetLocation.getLongitude());
-            editor.putBoolean(STATE_IS_SET, alarmSet);
+        if(settings.contains(STATE_TARGET_LOCATION_LATITUDE)&&
+                settings.contains(STATE_TARGET_LOCATION_LONGITUDE)){
+            Log.i(TAG, "**************************************************************");
+            targetLocation = new Location("target");
+            targetLocation.setLatitude(getDoubleSettings(settings, STATE_TARGET_LOCATION_LATITUDE, 0.0));
+            targetLocation.setLongitude(getDoubleSettings(settings, STATE_TARGET_LOCATION_LONGITUDE, 0.0));
+            Log.i(TAG, "**************************************************************");
+            alarmSet = settings.getBoolean(STATE_IS_SET,false);
+            marker = settings.getBoolean(STATE_MARKER,false);
+            if(alarmSet && mMap!=null && marker){
+                distanceView.setText(settings.getString(STATE_DISTANCE_VIEW, ""));
+                mMap.addMarker(new MarkerOptions()
+                        .position(new LatLng(targetLocation.getLatitude(), targetLocation.getLongitude()))
+                        .draggable(false));
+            }
+            else{
+                distanceView.setText("Distance: 0m");
+            }
+            Log.i(TAG, "**************************************************************");
+        }else{
+            Log.i(TAG, "**************************************************************");
+            distanceView.setText("Distance: 0m");
+            Log.i(TAG, "ITS NOT THERE,ONRESTART");
+            Log.i(TAG, "**************************************************************");
         }
-        Log.i(TAG, "IS IT THERE?: " + settings.contains(STATE_USER_LOCATION));
-        Log.i(TAG, "**************************************************************");
-        editor.commit();
-        Log.i(TAG, "IS IT THERE?: " + settings.contains(STATE_USER_LOCATION));
-        Log.i(TAG, "**************************************************************");
     }
 
     @Override
     protected void onResume(){
         super.onResume();
 
-        String val = "null";
         settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        if(settings.contains(STATE_USER_LOCATION)){
+        if(settings.contains(STATE_TARGET_LOCATION_LATITUDE)&&
+                settings.contains(STATE_TARGET_LOCATION_LONGITUDE)){
             Log.i(TAG, "**************************************************************");
-            String temp = settings.getString(STATE_USER_LOCATION, " It wasn't found");
+            targetLocation = new Location("target");
+            targetLocation.setLatitude(getDoubleSettings(settings, STATE_TARGET_LOCATION_LATITUDE, 0.0));
+            targetLocation.setLongitude(getDoubleSettings(settings, STATE_TARGET_LOCATION_LONGITUDE, 0.0));
+            Log.i(TAG, "**************************************************************");
+            setUpMap();
             alarmSet = settings.getBoolean(STATE_IS_SET,false);
+            marker = settings.getBoolean(STATE_MARKER,false);
             if(alarmSet){
                 distanceView.setText(settings.getString(STATE_DISTANCE_VIEW, ""));
-                //TODO
-
+                if(mMap != null && marker){
+                    userAlarmLocation = new LatLng(targetLocation.getLatitude(), targetLocation.getLongitude());
+                    mMap.addMarker(new MarkerOptions()
+                            .position(userAlarmLocation)
+                            .draggable(false));
+                }
             }
             else{
                 distanceView.setText("Distance: 0m");
             }
-            Log.i(TAG, temp);
             Log.i(TAG, "**************************************************************");
         }else{
             Log.i(TAG, "**************************************************************");
+            distanceView.setText("Distance: 0m");
             Log.i(TAG, "ITS NOT THERE,ONRESTART");
             Log.i(TAG, "**************************************************************");
         }
@@ -591,21 +618,36 @@ public class MainActivity extends Activity implements
     @Override
     protected void onRestart(){
         super.onRestart();
-        String val = "null";
         settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        if(settings.contains(STATE_USER_LOCATION)){
+        if(settings.contains(STATE_TARGET_LOCATION_LATITUDE)&&
+                settings.contains(STATE_TARGET_LOCATION_LONGITUDE)){
             Log.i(TAG, "**************************************************************");
-            String temp = settings.getString(STATE_USER_LOCATION, "It wasn't found");
-            Log.i(TAG, temp);
+            targetLocation = new Location("target");
+            targetLocation.setLatitude(getDoubleSettings(settings, STATE_TARGET_LOCATION_LATITUDE, 0.0));
+            targetLocation.setLongitude(getDoubleSettings(settings, STATE_TARGET_LOCATION_LONGITUDE, 0.0));
             Log.i(TAG, "**************************************************************");
-
-
+            setUpMap();
+            alarmSet = settings.getBoolean(STATE_IS_SET,false);
+            marker = settings.getBoolean(STATE_MARKER,false);
+            if(alarmSet){
+                distanceView.setText(settings.getString(STATE_DISTANCE_VIEW, ""));
+                if(mMap != null && marker){
+                    userAlarmLocation = new LatLng(targetLocation.getLatitude(), targetLocation.getLongitude());
+                    mMap.addMarker(new MarkerOptions()
+                            .position(userAlarmLocation)
+                            .draggable(false));
+                }
+            }
+            else{
+                distanceView.setText("Distance: 0m");
+            }
+            Log.i(TAG, "**************************************************************");
         }else{
             Log.i(TAG, "**************************************************************");
+            distanceView.setText("Distance: 0m");
             Log.i(TAG, "ITS NOT THERE,ONRESTART");
             Log.i(TAG, "**************************************************************");
         }
-
     }
 
 
@@ -693,8 +735,9 @@ public class MainActivity extends Activity implements
             CustomDialog dialog = new CustomDialog(this,"Are you sure?");
             dialog.show();
             userAlarmLocation = point;
+            setTargetLocation();
         }
-        setTargetLocation();
+
 
     }
 
