@@ -511,7 +511,7 @@ public class MainActivity extends Activity implements
             alarmSet = false;
             settings = PreferenceManager.getDefaultSharedPreferences(this);
             SharedPreferences.Editor editor = settings.edit();
-            editor.putBoolean(STATE_IS_SET, false);
+            //editor.putBoolean(STATE_IS_SET, false);
         }
         super.onDestroy();
 
